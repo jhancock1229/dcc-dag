@@ -224,6 +224,23 @@ export const NODES = [
     desc: "Level 250 goddess of Hopelessness and Insanity. Patron of Sister Ines. Manifests from Ines's dissolving corpse when Louis kills her. Invulnerable on the floor. Curses all of Carl's potions into vinegar. Enslaves Amayon. The dungeon converts the resulting crisis into a final card battle. Killed by Paz Lo when he is freed from his card, saving everyone on the floor." },
   { id: "heyzoos", label: "HeyZoos (Uzi Jesus)", book: 6, faction: "NPCS", role: "Boss/Deity", x: 1350, y: 440,
     desc: "Unique undead T'Ghee Card from Ecuador. Level 140 ranged healer totem. Catchphrase: 'I am the way, motherfucker.' Can resurrect other totems and turn blood into lead. One of Carl's most memorable card captures." },
+  // ── Book 7 ────────────────────────────────────────────────────────────────
+  { id: "juice_box", label: "Juice Box", book: 7, faction: "NPCS", role: "Elite NPC", x: 650, y: 550,
+    desc: "Changeling NPC, sister of Henrik. Former teacher in a past crawl. Has been awakening other NPCs to self-awareness throughout the crawl. On Floor 9 becomes co-Warlord of Team Retribution (the self-aware NPC faction) alongside Ferdinand. Marries Louis in a swift ceremony to seal the Princess Posse alliance. Uses her Unwashed form — a cosmic dread entity — to shock the Warlord Council. Genuinely in love with Louis." },
+  { id: "ferdinand", label: "Ferdinand", book: 7, faction: "NPCS", role: "Host/Boss", x: 760, y: 550,
+    desc: "A real-world cat (true name: Gravy Boat) who lived outside Carl's Seattle apartment — Donut's unrequited pre-dungeon love. Entered Floor 9 as a player-controlled avatar for Larracos's city defense system. Co-Warlord of Team Retribution. Commands Simoom, a level-75 armored battle rhino, and fires powerful lightning bolts. His supreme feline confidence and total refusal to accept 'no' are played entirely straight. Donut has Complicated Feelings." },
+  { id: "architect_houston", label: "Architect Houston", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 920, y: 680,
+    desc: "Warlord of the Viceroy faction (The Madness). Philosophically obsessed with death and the 'Beautiful Place.' Militarily the most sophisticated opponent Carl faces. Cheats using outside intel from the live feed. Engineered the Ceasefire-ending cascade by colluding with Stockade. Shows disturbing fascination with Juice Box's Unwashed form." },
+  { id: "d_nadia", label: "Empress D'Nadia", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 1020, y: 620,
+    desc: "Saccathian princess-turned-empress of the Prism Kingdom. Warlord of her own Bloc faction, presents herself as Carl and Donut's friend while slaughtering crawlers by the thousands. Carl and Donut kill her (Gavrilo Princip Achievement), bankrupting the last heir of a powerful trading dynasty and rattling the Syndicate probate courts." },
+  { id: "stockade", label: "Cmdr. Stockade", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 1060, y: 730,
+    desc: "Warlord of the Lemig Sortion (goblin faction). Colluded with Architect Houston to cheat by relaying outside intel. Exploited the Warlord Summon mechanic while Carl was unconscious, allowing Shi Maria to briefly escape. Overcome with Shi Maria's aura of insanity, committed suicide by bashing his own head during the Warlord Council hearing — accidentally ending the Ceasefire 23 hours early and triggering total chaos." },
+  { id: "epitome_tagg", label: "Epitome Tagg", book: 5, faction: "MEDIA", role: "Show Host", x: 1400, y: 350,
+    desc: "Syndicate media personality. Louis repeatedly jokes about how attractive he finds them. As revenge, The Dream faction plans to shoot him with an Arrow of Enthusiastic Double Gonorrhea. In Book 7 a deeply disturbing mystery emerges: Juice Box finds Louis hooked up to machines in a Reaver castle with his heart and lungs partially replaced by Epitome's mechanical parts — Epitome Tagg appears to be somehow alive inside Louis's body, sharing it." },
+  { id: "eris", label: "Eris", book: 7, faction: "NPCS", role: "Deity", x: 510, y: 400,
+    desc: "Goddess of Chaos. Elf-like with serpentine features, forked tongue, spiral tattoo on her lips, black-and-white coat over glowing Valkyrie armor. Summoned by battlefield conditions at the Masquerade. Her proximity makes one god-effect on Carl permanent — the Pied Piper Spell lands instead of the Meatus curse. Tells Carl three critical facts: that he is married, that the War Mage Rebellion sold the Gate, and that Britney is possessed. Prime contender for the Ascendant Throne. Appears outside the dungeon in the epilogue." },
+  { id: "eileithyia", label: "Eileithyia", book: 7, faction: "NPCS", role: "Deity", x: 460, y: 510,
+    desc: "Goddess of Childbirth and Female Pain, sponsored by Huanxin Jinx. Unusually benevolent. Her boon orchid offers triple constitution, Floor 12 transfer, or pregnancy. In Book 7 Katia consumes it and chooses pregnancy — Louis becomes the biological father. Has marked Carl as a friend of the church. Her retainer Yemaya re-ascended on Floor 8." },
 ];
 
 export const EDGES = [
@@ -431,4 +448,30 @@ export const EDGES = [
   { from: "osvaldo", to: "carl", type: "allied", label: "Floor 8 leaderboard ally" },
   // HeyZoos card
   { from: "donut", to: "heyzoos", type: "companion", label: "captured as T'Ghee card" },
+
+  // ── Book 7 edges ──────────────────────────────────────────────────────────
+  // Team Retribution
+  { from: "juice_box", to: "ferdinand", type: "allied", label: "co-Warlords of Team Retribution" },
+  { from: "juice_box", to: "louis", type: "companion", label: "marries / genuine love" },
+  { from: "louis", to: "juice_box", type: "companion", label: "marries / baffled by her love" },
+  { from: "carl", to: "juice_box", type: "allied", label: "alliance with Team Retribution" },
+  { from: "carl", to: "ferdinand", type: "allied", label: "alliance / Donut's complicated feelings" },
+  { from: "donut", to: "ferdinand", type: "connected", label: "pre-dungeon unrequited love" },
+  // Warlord antagonists
+  { from: "architect_houston", to: "carl", type: "antagonizes", label: "Bloc commander / cheats with outside intel" },
+  { from: "architect_houston", to: "stockade", type: "controls", label: "colluded on Ceasefire trap" },
+  { from: "stockade", to: "carl", type: "antagonizes", label: "summons unconscious Carl to castle" },
+  { from: "stockade", to: "shi_maria", type: "causes", label: "triggers Shi Maria escape attempt" },
+  { from: "carl", to: "d_nadia", type: "killed", label: "kills (Gavrilo Princip Achievement)" },
+  { from: "donut", to: "d_nadia", type: "killed", label: "kills Empress D'Nadia" },
+  { from: "d_nadia", to: "carl", type: "connected", label: "claimed friendship / actually enemy" },
+  // Deities
+  { from: "eris", to: "carl", type: "allied", label: "permanent god-effect / gives 3 key facts" },
+  { from: "eileithyia", to: "katia", type: "quest", label: "boon: grants pregnancy (Book 7)" },
+  { from: "eileithyia", to: "carl", type: "allied", label: "marked as friend of church" },
+  { from: "louis", to: "katia", type: "companion", label: "biological father of Katia's child" },
+  // Katia / Epitome body mystery
+  { from: "juice_box", to: "louis", type: "rescued", label: "rescues from Reaver castle / finds Epitome inside" },
+  { from: "epitome_tagg", to: "louis", type: "controls", label: "body-sharing mystery: found inside Louis" },
+
 ];

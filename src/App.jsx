@@ -142,10 +142,129 @@ function forceDirectedPositions(nodes, edges, iters = 320) {
   return pos;
 }
 
+// ─── Prominence weights (appearance / narrative importance score) ──────────
+// Scale 1–10. Carl=10, Donut=10. Scores approximate how often / centrally
+// each character features across all 7 books.
+export const PROMINENCE = {
+  carl: 10, donut: 10, mordecai: 8, katia: 8, mongo: 7,
+  samantha: 7, louis: 6, imani: 6, bautista: 5, britney: 5,
+  juice_box: 5, zev: 5, odette: 5, li_jun: 4, li_na: 4,
+  zhang: 4, prepotente: 5, miriam: 4, bianca: 3, angelo: 1,
+  world_ai: 6, borant: 4, cascadia: 4, harbinger: 3,
+  baroness_victory: 3, agatha: 4,
+  signet: 4, quan: 3, lucia_mar: 4,
+  florin: 3, ifechi: 2, tran: 2, osvaldo: 2,
+  sister_ines: 3, paz_lo: 3, anton: 2,
+  shi_maria: 5, heyzoos: 2, amayon: 3, ysalte: 3,
+  ferdinand: 4, architect_houston: 4, d_nadia: 3, stockade: 3, eris: 4, eileithyia: 3,
+  beatrice: 3, chris_andrews: 3,
+  prince_stalwart: 3, maestro: 3, prince_gurgle: 2,
+  remex: 3, drakea: 2, porthus: 2, herot: 2,
+  rosetta_thagra: 2, milk: 2,
+  epitome_tagg: 2,
+  // fill any remaining with 1.5
+};
+
+function getProminence(id) {
+  return PROMINENCE[id] ?? 1.5;
+}
+
+// Prominence layout: faction-seeded force with size-weighted repulsion
+function prominencePositions(nodes, edges, iters = 320) {
+  if (nodes.length === 0) return {};
+  const W = 2400, H = 1600;
+  const DAMPING = 0.80;
+  const CX = W / 2, CY = H / 2;
+
+  const factionCentroid = {};
+  const factionCount = {};
+  nodes.forEach(n => {
+    if (!factionCentroid[n.faction]) { factionCentroid[n.faction] = { x: 0, y: 0 }; factionCount[n.faction] = 0; }
+    factionCentroid[n.faction].x += n.x;
+    factionCentroid[n.faction].y += n.y;
+    factionCount[n.faction]++;
+  });
+  Object.keys(factionCentroid).forEach(f => {
+    factionCentroid[f].x /= factionCount[f];
+    factionCentroid[f].y /= factionCount[f];
+  });
+
+  const pos = {}, vel = {};
+  nodes.forEach(n => {
+    const cx = factionCentroid[n.faction]?.x ?? CX;
+    const cy = factionCentroid[n.faction]?.y ?? CY;
+    pos[n.id] = { x: cx + (Math.random() - 0.5) * 180, y: cy + (Math.random() - 0.5) * 180 };
+    vel[n.id] = { x: 0, y: 0 };
+  });
+
+  const ids = nodes.map(n => n.id);
+  const nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
+
+  for (let iter = 0; iter < iters; iter++) {
+    const cooling = 1 - (iter / iters) * 0.88;
+    const force = {};
+    ids.forEach(id => { force[id] = { x: 0, y: 0 }; });
+
+    // Repulsion scaled by the sum of both node radii (bigger nodes push harder)
+    for (let a = 0; a < ids.length; a++) {
+      for (let b = a + 1; b < ids.length; b++) {
+        const ia = ids[a], ib = ids[b];
+        const ra = 14 + getProminence(ia) * 3.2;
+        const rb = 14 + getProminence(ib) * 3.2;
+        const minDist = ra + rb + 18;
+        const dx = pos[ia].x - pos[ib].x, dy = pos[ia].y - pos[ib].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const REPULSION = minDist * minDist * 2.0;
+        const mag = REPULSION / (dist * dist);
+        const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
+        force[ia].x += nx; force[ia].y += ny;
+        force[ib].x -= nx; force[ib].y -= ny;
+      }
+    }
+
+    // Edge springs
+    const K = 95;
+    edges.forEach(e => {
+      if (!pos[e.from] || !pos[e.to]) return;
+      const dx = pos[e.to].x - pos[e.from].x, dy = pos[e.to].y - pos[e.from].y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const mag = (dist - K) * 0.01;
+      const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
+      force[e.from].x += nx; force[e.from].y += ny;
+      force[e.to].x  -= nx; force[e.to].y  -= ny;
+    });
+
+    // Faction-centroid gravity
+    const FACTION_GRAVITY = 0.024 * (1 - cooling * 0.4);
+    ids.forEach(id => {
+      const n = nodeMap[id];
+      const fc = factionCentroid[n.faction];
+      if (fc) {
+        force[id].x += (fc.x - pos[id].x) * FACTION_GRAVITY;
+        force[id].y += (fc.y - pos[id].y) * FACTION_GRAVITY;
+      }
+    });
+
+    const K_base = Math.sqrt((W * H) / nodes.length) * 0.9;
+    ids.forEach(id => {
+      vel[id].x = (vel[id].x + force[id].x) * DAMPING;
+      vel[id].y = (vel[id].y + force[id].y) * DAMPING;
+      const speed = Math.sqrt(vel[id].x ** 2 + vel[id].y ** 2);
+      const maxSpeed = K_base * cooling * 0.5;
+      if (speed > maxSpeed) { vel[id].x *= maxSpeed / speed; vel[id].y *= maxSpeed / speed; }
+      pos[id].x = Math.max(70, Math.min(W - 70, pos[id].x + vel[id].x));
+      pos[id].y = Math.max(70, Math.min(H - 70, pos[id].y + vel[id].y));
+    });
+  }
+  return pos;
+}
+
 const LAYOUTS = [
   { id: "manual",       label: "Manual",    icon: "✦", desc: "Hand-tuned" },
   { id: "hierarchical", label: "Story Arc", icon: "⟶", desc: "Books as columns" },
   { id: "force",        label: "Force",     icon: "⬡", desc: "Physics" },
+  { id: "prominence",   label: "Prominence",icon: "◎", desc: "Sized by importance" },
 ];
 
 // ─── Styles ────────────────────────────────────────────────────────────────
@@ -214,10 +333,11 @@ export default function DCCDag() {
     manual: (() => { const m = {}; NODES.forEach(n => { m[n.id] = { x: n.x, y: n.y }; }); return m; })(),
     hierarchical: null,
     force: null,
+    prominence: null,
   });
 
   // Per-layout user drag overrides
-  const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {} });
+  const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {}, prominence: {} });
 
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
@@ -243,6 +363,7 @@ export default function DCCDag() {
       });
       if (layout === "hierarchical") computed = hierarchicalPositions(NODES);
       if (layout === "force")        computed = forceDirectedPositions(NODES, EDGES);
+      if (layout === "prominence")   computed = prominencePositions(NODES, EDGES);
       setPositionsByLayout(prev => ({ ...prev, [layout]: computed }));
       setIsComputing(false);
     }, 40);
@@ -252,9 +373,9 @@ export default function DCCDag() {
   // Recompute force layout when re-requested (shuffle button)
   const reshuffleForce = useCallback(() => {
     setIsComputing(true);
-    setPositionsByLayout(prev => ({ ...prev, force: null }));
-    setUserDrag(prev => ({ ...prev, force: {} }));
-  }, []);
+    setPositionsByLayout(prev => ({ ...prev, [layout]: null }));
+    setUserDrag(prev => ({ ...prev, [layout]: {} }));
+  }, [layout]);
 
   // Merge computed base + user drag overrides
   const positions = useMemo(() => {
@@ -329,11 +450,11 @@ export default function DCCDag() {
   const switchLayout = useCallback((id) => {
     setLayout(id);
     setPan({ x: 0, y: 20 });
-    setZoom(id === "hierarchical" ? 0.38 : 0.72);
+    setZoom(id === "hierarchical" ? 0.38 : id === "force" || id === "prominence" ? 0.55 : 0.72);
     setSelected(null);
   }, []);
 
-  const DEFAULT_ZOOM = { manual: 0.72, hierarchical: 0.38, force: 0.58 };
+  const DEFAULT_ZOOM = { manual: 0.72, hierarchical: 0.38, force: 0.58, prominence: 0.55 };
 
   return (
     <div style={{
@@ -361,11 +482,11 @@ export default function DCCDag() {
           <span style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.06em", textShadow: "0 0 28px rgba(245,158,11,0.5)" }}>
             ⚔ DUNGEON CRAWLER CARL
           </span>
-          <span style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–6 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
+          <span style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 3 }}>
-            {["ALL","1","2","3","4","5","6"].map(b => (
+            {["ALL","1","2","3","4","5","6","7"].map(b => (
               <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
                 style={{
                   background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
@@ -426,7 +547,7 @@ export default function DCCDag() {
           {/* Story Arc column headers */}
           {layout === "hierarchical" && (
             <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
-              {[1,2,3,4,5,6].map(b => (
+              {[1,2,3,4,5,6,7].map(b => (
                 <g key={b}>
                   <rect x={200 + (b-1)*420 - 130} y={20} width={260} height={62} rx={8}
                     fill={`rgba(245,158,11,0.04)`} stroke="rgba(245,158,11,0.1)" strokeWidth={1} />
@@ -479,7 +600,8 @@ export default function DCCDag() {
               const isSel = selected === node.id;
               const isHov = hovered === node.id;
               const dimmed = connectedIds && !connectedIds.has(node.id);
-              const R = isSel ? 33 : isHov ? 30 : 25;
+              const baseR = layout === "prominence" ? Math.round(12 + getProminence(node.id) * 3.2) : 25;
+              const R = isSel ? baseR + 8 : isHov ? baseR + 5 : baseR;
               const bookColor = node.book === 3 ? "#4ade80" : node.book === 2 ? "#a78bfa" : null;
               return (
                 <g key={node.id} transform={`translate(${pos.x},${pos.y})`}
@@ -551,8 +673,8 @@ export default function DCCDag() {
             <div style={{ display: "flex", gap: 4 }}>
               {LAYOUTS.map(l => (
                 <button key={l.id}
-                  onClick={() => { if (l.id === "force" && layout === "force") reshuffleForce(); else switchLayout(l.id); }}
-                  title={l.id === "force" && layout === "force" ? "Click to reshuffle" : l.desc}
+                  onClick={() => { if ((l.id === "force" || l.id === "prominence") && layout === l.id) reshuffleForce(); else switchLayout(l.id); }}
+                  title={(l.id === "force" || l.id === "prominence") && layout === l.id ? "Click to reshuffle" : l.desc}
                   style={{
                     flex: 1, padding: "5px 4px", borderRadius: 6, cursor: "pointer",
                     background: layout === l.id ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.04)",
@@ -566,9 +688,9 @@ export default function DCCDag() {
                 </button>
               ))}
             </div>
-            {layout === "force" && (
+            {(layout === "force" || layout === "prominence") && (
               <div style={{ fontSize: 9, color: "#44403c", textAlign: "center", marginTop: 5, fontFamily: "monospace" }}>
-                click Force again to reshuffle
+                click again to reshuffle
               </div>
             )}
           </div>
