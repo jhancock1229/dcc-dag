@@ -344,6 +344,8 @@ export default function DCCDag() {
 
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
+  // Graph bounding box (manual layout) — computed once
+  const GRAPH_BOUNDS = { minX: 50, maxX: 1470, minY: -30, maxY: 760 };
   const [pan, setPan] = useState({ x: 0, y: 20 });
   const [zoom, setZoom] = useState(0.72);
   const [filterFaction, setFilterFaction] = useState("ALL");
@@ -372,6 +374,38 @@ export default function DCCDag() {
     }, 40);
     return () => clearTimeout(tid);
   }, [layout]);
+
+  // Center the graph once the SVG is actually sized in the DOM
+  const centeredRef = useRef(false);
+  useEffect(() => {
+    if (centeredRef.current) return;
+    const el = svgRef.current;
+    if (!el) return;
+    const doCenter = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width === 0 || height === 0) return false;
+      const { minX, maxX, minY, maxY } = GRAPH_BOUNDS;
+      const graphW = maxX - minX;
+      const graphH = maxY - minY;
+      const fitZoom = Math.min(width / graphW, height / graphH) * 0.85;
+      const z = Math.min(0.82, Math.max(0.35, fitZoom));
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      setPan({ x: width / 2 - cx * z, y: height / 2 - cy * z });
+      setZoom(z);
+      return true;
+    };
+    if (!doCenter()) {
+      // SVG not sized yet — observe until it is
+      const ro = new ResizeObserver(() => {
+        if (doCenter()) { ro.disconnect(); centeredRef.current = true; }
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    } else {
+      centeredRef.current = true;
+    }
+  }, []);
 
   // Recompute force layout when re-requested (shuffle button)
   const reshuffleForce = useCallback(() => {
@@ -450,14 +484,29 @@ export default function DCCDag() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [onWheel]);
 
-  const switchLayout = useCallback((id) => {
-    setLayout(id);
-    setPan({ x: 0, y: 20 });
-    setZoom(id === "hierarchical" ? 0.38 : id === "force" || id === "prominence" ? 0.55 : 0.72);
-    setSelected(null);
+  const centerGraph = useCallback((targetZoom) => {
+    const el = svgRef.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    if (width === 0) return;
+    const { minX, maxX, minY, maxY } = GRAPH_BOUNDS;
+    const graphW = maxX - minX;
+    const graphH = maxY - minY;
+    const fitZoom = targetZoom ?? Math.min(width / graphW, height / graphH) * 0.88;
+    const z = Math.min(0.82, Math.max(0.35, fitZoom));
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    setPan({ x: width / 2 - cx * z, y: height / 2 - cy * z });
+    setZoom(z);
   }, []);
 
-  const DEFAULT_ZOOM = { manual: 0.72, hierarchical: 0.38, force: 0.58, prominence: 0.55 };
+  const DEFAULT_ZOOM = { manual: null, hierarchical: 0.38, force: 0.55, prominence: 0.55 };
+
+  const switchLayout = useCallback((id) => {
+    setLayout(id);
+    centerGraph(DEFAULT_ZOOM[id]);
+    setSelected(null);
+  }, [centerGraph]);
 
   return (
     <div style={{
@@ -485,7 +534,7 @@ export default function DCCDag() {
           <span style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.06em", textShadow: "0 0 28px rgba(245,158,11,0.5)" }}>
             ⚔ DUNGEON CRAWLER CARL
           </span>
-          <span style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
+          <span className="dag-subtitle" style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           {page === "dag" && <>
@@ -509,7 +558,7 @@ export default function DCCDag() {
                 <option key={k} value={k}>{v.label}</option>
               ))}
             </select>
-            <button onClick={() => { setPan({ x: 0, y: 20 }); setZoom(DEFAULT_ZOOM[layout]); }}
+            <button onClick={() => centerGraph(DEFAULT_ZOOM[layout])}
               style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#f59e0b", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
               Reset View
             </button>
@@ -736,6 +785,7 @@ export default function DCCDag() {
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (max-width: 600px) { .dag-subtitle { display: none; } }
       `}</style>
     </div>
   );
@@ -974,48 +1024,48 @@ function CookbookPage() {
   };
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 22px 60px" }}>
+    <div className="cb-page" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 28px 80px" }}>
 
         {/* Page header */}
-        <div style={{ marginBottom: 22, paddingBottom: 18, borderBottom: "1px solid rgba(245,158,11,0.12)" }}>
-          <div style={{ fontSize: 11, color: "#44403c", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+        <div style={{ marginBottom: 26, paddingBottom: 20, borderBottom: "1px solid rgba(245,158,11,0.12)" }}>
+          <div style={{ fontSize: 11, color: "#57534e", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>
             Reference
           </div>
-          <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.05em", textShadow: "0 0 28px rgba(245,158,11,0.35)" }}>
+          <h1 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.04em", textShadow: "0 0 28px rgba(245,158,11,0.35)" }}>
             ⚡ The Dungeon Anarchist's Cookbook
           </h1>
-          <p style={{ margin: "0 0 16px", fontSize: 12.5, color: "#78716c", lineHeight: 1.7, maxWidth: 680 }}>
+          <p style={{ margin: "0 0 18px", fontSize: 14, color: "#78716c", lineHeight: 1.75, maxWidth: 700 }}>
             Created by the System AI in the 15th season. Passed to crawlers meeting unknown criteria.
             Neither audience nor production can see its contents. Disappears on death or retirement.
             25 known editions. Most of its authors did not survive.
           </p>
           {/* Stat row */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
-              { label: "Editions",       val: 25,           col: "#f59e0b" },
-              { label: "Named Authors",  val: 23,           col: "#e2d9c8" },
-              { label: "Confirmed Dead", val: totals.dead,  col: "#f87171" },
-              { label: "Confirmed Alive",val: totals.alive, col: "#34d399" },
-              { label: "Active in B7",   val: totals.b7,    col: "#a78bfa" },
+              { label: "Editions",        val: 25,           col: "#f59e0b" },
+              { label: "Named Authors",   val: 23,           col: "#e2d9c8" },
+              { label: "Confirmed Dead",  val: totals.dead,  col: "#f87171" },
+              { label: "Confirmed Alive", val: totals.alive, col: "#34d399" },
+              { label: "Active in B7",    val: totals.b7,    col: "#a78bfa" },
             ].map(s => (
-              <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${s.col}22`, borderRadius: 8, padding: "7px 14px", minWidth: 80, textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: s.col, lineHeight: 1 }}>{s.val}</div>
-                <div style={{ fontSize: 9.5, color: "#57534e", marginTop: 3, letterSpacing: "0.05em" }}>{s.label}</div>
+              <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${s.col}22`, borderRadius: 8, padding: "9px 18px", minWidth: 90, textAlign: "center" }}>
+                <div className="cb-stat-val" style={{ fontSize: 24, fontWeight: 700, color: s.col, lineHeight: 1 }}>{s.val}</div>
+                <div className="cb-stat-label" style={{ fontSize: 11, color: "#57534e", marginTop: 4, letterSpacing: "0.04em" }}>{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Filter bar */}
-        <div style={{ display: "flex", gap: 7, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search name, race, contributions…"
             style={{
-              flex: 1, minWidth: 180,
+              flex: 1, minWidth: 200,
               background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 7, color: "#e2d9c8", padding: "6px 11px", fontSize: 12,
+              borderRadius: 7, color: "#e2d9c8", padding: "7px 13px", fontSize: 13,
               outline: "none", fontFamily: "Georgia,'Times New Roman',serif",
             }}
           />
@@ -1024,16 +1074,16 @@ function CookbookPage() {
               background: filterStatus === s ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.04)",
               border: filterStatus === s ? "1px solid rgba(245,158,11,0.45)" : "1px solid rgba(255,255,255,0.1)",
               borderRadius: 6, color: filterStatus === s ? "#f59e0b" : "#78716c",
-              padding: "5px 12px", fontSize: 12, cursor: "pointer",
+              padding: "6px 14px", fontSize: 13, cursor: "pointer",
             }}>
               {s === "ALL" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
-          <span style={{ fontSize: 10, color: "#3c3834", marginLeft: 2 }}>{filtered.length}/{AUTHORS.length}</span>
+          <span style={{ fontSize: 12, color: "#44403c", marginLeft: 2 }}>{filtered.length}/{AUTHORS.length}</span>
         </div>
 
         {/* Author cards */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {filtered.map(a => {
             const sc = STATUS_CONFIG[a.status];
             const isOpen = expanded === a.ed;
@@ -1051,63 +1101,63 @@ function CookbookPage() {
                 onClick={() => setExpanded(isOpen ? null : a.ed)}>
 
                 {/* Collapsed row */}
-                <div style={{ display: "grid", gridTemplateColumns: "52px 1fr auto", alignItems: "center", gap: 12, padding: "11px 14px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", alignItems: "center", gap: 16, padding: "13px 18px" }}>
                   {/* Edition badge */}
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", lineHeight: 1 }}>{a.ed}</div>
-                    <div style={{ fontSize: 9, color: "#44403c", letterSpacing: "0.04em" }}>{a.suffix} ed.</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#f59e0b", lineHeight: 1 }}>{a.ed}</div>
+                    <div style={{ fontSize: 10, color: "#57534e", letterSpacing: "0.04em" }}>{a.suffix} ed.</div>
                   </div>
 
                   {/* Name + race */}
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: a.isUnknown ? "#44403c" : "#e2d9c8", fontStyle: a.isUnknown ? "italic" : "normal" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span className="cb-name" style={{ fontSize: 15, fontWeight: 700, color: a.isUnknown ? "#57534e" : "#e2d9c8", fontStyle: a.isUnknown ? "italic" : "normal" }}>
                         {a.name}
                       </span>
                       {a.b7 && (
-                        <span style={{ fontSize: 9, background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.06em" }}>
+                        <span style={{ fontSize: 10, background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 4, padding: "1px 7px", letterSpacing: "0.06em" }}>
                           BOOK 7
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 10.5, color: "#57534e", marginTop: 1 }}>
+                    <div style={{ fontSize: 12, color: "#57534e", marginTop: 2 }}>
                       {a.race !== "Unknown" && <span>{a.race}</span>}
-                      {a.race !== "Unknown" && a.season && <span style={{ color: "#3c3834" }}> · </span>}
-                      {a.season && <span style={{ fontStyle: "italic", color: "#3c3834" }}>{a.season}</span>}
+                      {a.race !== "Unknown" && a.season && <span style={{ color: "#44403c" }}> · </span>}
+                      {a.season && <span style={{ fontStyle: "italic", color: "#44403c" }}>{a.season}</span>}
                     </div>
                   </div>
 
                   {/* Status + chevron */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ textAlign: "right" }}>
-                      <span style={{ fontSize: 10.5, padding: "2px 8px", borderRadius: 5, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+                      <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 5, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
                         {sc.label}
                       </span>
                       {a.statusNote && (
-                        <div style={{ fontSize: 9.5, color: sc.color, opacity: 0.65, marginTop: 2, maxWidth: 200, textAlign: "right" }}>
+                        <div style={{ fontSize: 11, color: sc.color, opacity: 0.65, marginTop: 3, maxWidth: 220, textAlign: "right" }}>
                           {a.statusNote}
                         </div>
                       )}
                     </div>
-                    <span style={{ fontSize: 14, color: "#44403c", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</span>
+                    <span style={{ fontSize: 16, color: "#57534e", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</span>
                   </div>
                 </div>
 
                 {/* Expanded detail */}
                 {isOpen && (
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "14px 16px 16px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }} className="cb-grid">
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "18px 20px 20px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="cb-grid">
                       <div>
-                        <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7 }}>
+                        <div style={{ fontSize: 10, color: "#44403c", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
                           Contributions &amp; Crawl Notes
                         </div>
-                        <p style={{ margin: 0, fontSize: 12.5, color: "#c4bcb2", lineHeight: 1.75 }}>{a.contributions}</p>
+                        <p className="cb-body" style={{ margin: 0, fontSize: 13.5, color: "#c4bcb2", lineHeight: 1.8 }}>{a.contributions}</p>
                       </div>
                       <div>
-                        <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7 }}>
+                        <div style={{ fontSize: 10, color: "#44403c", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
                           Whereabouts — End of Book 7
                         </div>
-                        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.75, color: a.status === "dead" ? "#f87171" : a.status === "alive" ? "#34d399" : "#78716c", opacity: 0.9 }}>
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.8, color: a.status === "dead" ? "#f87171" : a.status === "alive" ? "#34d399" : "#78716c", opacity: 0.9 }}>
                           {a.whereabouts}
                         </p>
                       </div>
@@ -1120,16 +1170,22 @@ function CookbookPage() {
         </div>
 
         {/* Footer note */}
-        <div style={{ marginTop: 28, padding: "12px 16px", background: "rgba(255,255,255,0.02)", borderRadius: 7, border: "1px solid rgba(255,255,255,0.05)", fontSize: 11, color: "#3c3834", lineHeight: 1.8, fontStyle: "italic" }}>
+        <div style={{ marginTop: 32, padding: "14px 18px", background: "rgba(255,255,255,0.02)", borderRadius: 7, border: "1px solid rgba(255,255,255,0.05)", fontSize: 12, color: "#44403c", lineHeight: 1.85, fontStyle: "italic" }}>
           The 1st Edition has no confirmed author. The 23rd Edition exists (gap between Drakea's 22nd and Rickard's 24th) but its author is unnamed through Book 7.
-          Status reflects known facts as of <em style={{ color: "#44403c" }}>This Inevitable Ruin</em> (Book 7).
+          Status reflects known facts as of <em style={{ color: "#57534e" }}>This Inevitable Ruin</em> (Book 7).
         </div>
       </div>
 
       <style>{`
         .cb-grid { grid-template-columns: 1fr 1fr; }
-        @media (max-width: 640px) { .cb-grid { grid-template-columns: 1fr !important; } }
-        input::placeholder { color: #3c3834; }
+        @media (max-width: 700px) { .cb-grid { grid-template-columns: 1fr !important; } }
+        input::placeholder { color: #44403c; }
+        .cb-page { font-size: clamp(13px, 1.4vw, 16px); }
+        .cb-page h1 { font-size: clamp(18px, 2.2vw, 28px) !important; }
+        .cb-page .cb-name { font-size: clamp(13px, 1.2vw, 16px) !important; }
+        .cb-page .cb-body { font-size: clamp(12px, 1.1vw, 14px) !important; }
+        .cb-stat-val { font-size: clamp(18px, 2vw, 26px) !important; }
+        .cb-stat-label { font-size: clamp(10px, 0.9vw, 12px) !important; }
       `}</style>
     </div>
   );
