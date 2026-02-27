@@ -1,5 +1,97 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { NODES, EDGES } from "./data.js";
+
+// ─── Layout engines ────────────────────────────────────────────────────────
+
+function manualPositions(nodes) {
+  const m = {};
+  nodes.forEach(n => { m[n.id] = { x: n.x, y: n.y }; });
+  return m;
+}
+
+function hierarchicalPositions(nodes) {
+  const BOOKS = [1, 2, 3, 4, 5, 6];
+  const FACTIONS = ["PARTY","MEADOWLARK","CRAWLERS","ANTAGONISTS","NPCS","SYSTEM","MEDIA","BACKSTORY"];
+  const COL_W = 300, ROW_H = 88, PAD_X = 160, PAD_Y = 100;
+  const m = {};
+  BOOKS.forEach(book => {
+    const inBook = nodes.filter(n => n.book === book);
+    const byFaction = {};
+    inBook.forEach(n => { (byFaction[n.faction] = byFaction[n.faction] || []).push(n); });
+    let rowIdx = 0;
+    FACTIONS.forEach(f => {
+      const group = byFaction[f] || [];
+      group.forEach((n, i) => {
+        m[n.id] = { x: PAD_X + (book - 1) * COL_W, y: PAD_Y + rowIdx * ROW_H + i * (ROW_H * 0.52) };
+      });
+      if (group.length > 0) rowIdx += group.length * 0.62 + 0.6;
+    });
+  });
+  return m;
+}
+
+function forceDirectedPositions(nodes, edges, iters = 300) {
+  if (nodes.length === 0) return {};
+  const W = 2200, H = 1500;
+  const K = Math.sqrt((W * H) / nodes.length);
+  const REPULSION = K * K * 2.6;
+  const SPRING = 0.011;
+  const DAMPING = 0.82;
+  const CX = W / 2, CY = H / 2;
+  const pos = {}, vel = {};
+  nodes.forEach((n, i) => {
+    const angle = (i / nodes.length) * Math.PI * 2;
+    const r = Math.min(W, H) * 0.28;
+    pos[n.id] = { x: CX + Math.cos(angle) * r + (Math.random() - 0.5) * 50, y: CY + Math.sin(angle) * r + (Math.random() - 0.5) * 50 };
+    vel[n.id] = { x: 0, y: 0 };
+  });
+  const ids = nodes.map(n => n.id);
+  for (let iter = 0; iter < iters; iter++) {
+    const cooling = 1 - (iter / iters) * 0.82;
+    const force = {};
+    ids.forEach(id => { force[id] = { x: 0, y: 0 }; });
+    for (let a = 0; a < ids.length; a++) {
+      for (let b = a + 1; b < ids.length; b++) {
+        const ia = ids[a], ib = ids[b];
+        const dx = pos[ia].x - pos[ib].x, dy = pos[ia].y - pos[ib].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const mag = REPULSION / (dist * dist);
+        const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
+        force[ia].x += nx; force[ia].y += ny;
+        force[ib].x -= nx; force[ib].y -= ny;
+      }
+    }
+    edges.forEach(e => {
+      if (!pos[e.from] || !pos[e.to]) return;
+      const dx = pos[e.to].x - pos[e.from].x, dy = pos[e.to].y - pos[e.from].y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const mag = (dist - K) * SPRING;
+      const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
+      force[e.from].x += nx; force[e.from].y += ny;
+      force[e.to].x  -= nx; force[e.to].y  -= ny;
+    });
+    ids.forEach(id => {
+      force[id].x += (CX - pos[id].x) * 0.003;
+      force[id].y += (CY - pos[id].y) * 0.003;
+      vel[id].x = (vel[id].x + force[id].x) * DAMPING;
+      vel[id].y = (vel[id].y + force[id].y) * DAMPING;
+      const speed = Math.sqrt(vel[id].x ** 2 + vel[id].y ** 2);
+      const maxSpeed = K * cooling * 0.5;
+      if (speed > maxSpeed) { vel[id].x *= maxSpeed / speed; vel[id].y *= maxSpeed / speed; }
+      pos[id].x = Math.max(60, Math.min(W - 60, pos[id].x + vel[id].x));
+      pos[id].y = Math.max(60, Math.min(H - 60, pos[id].y + vel[id].y));
+    });
+  }
+  return pos;
+}
+
+const LAYOUTS = [
+  { id: "manual",       label: "Manual",    icon: "✦", desc: "Hand-tuned" },
+  { id: "hierarchical", label: "Story Arc", icon: "⟶", desc: "Books as columns" },
+  { id: "force",        label: "Force",     icon: "⬡", desc: "Physics" },
+];
+
+// ─── Styles ────────────────────────────────────────────────────────────────
 
 const FACTION_STYLE = {
   PARTY:       { color: "#f59e0b", dim: "#78350f", label: "Carl's Party" },
@@ -13,44 +105,33 @@ const FACTION_STYLE = {
 };
 
 const EDGE_STYLE = {
-  party:       { color: "#f59e0b" },
-  trains:      { color: "#fde68a" },
-  allied:      { color: "#34d399" },
-  protected:   { color: "#34d399" },
-  killed:      { color: "#f87171" },
-  antagonizes: { color: "#f87171" },
-  hunts:       { color: "#f87171" },
-  controls:    { color: "#a78bfa" },
-  employs:     { color: "#a78bfa" },
-  manages:     { color: "#60a5fa" },
-  hosts:       { color: "#60a5fa" },
-  rescued:     { color: "#34d399" },
-  companion:   { color: "#f59e0b" },
-  causes:      { color: "#fb923c" },
-  exgf:        { color: "#94a3b8" },
-  leads:       { color: "#34d399" },
-  puppet:      { color: "#f87171" },
-  connected:   { color: "#78716c" },
-  quest:       { color: "#fb923c" },
-  joined:      { color: "#34d399" },
-  brokers:     { color: "#60a5fa" },
-  coerces:     { color: "#f87171" },
-  loved:       { color: "#fb923c" },
-  replaces:    { color: "#a78bfa" },
-  tricks:      { color: "#f87171" },
-  mentors:     { color: "#fde68a" },
+  party:       { color: "#f59e0b" }, trains:      { color: "#fde68a" },
+  allied:      { color: "#34d399" }, protected:   { color: "#34d399" },
+  killed:      { color: "#f87171" }, antagonizes: { color: "#f87171" },
+  hunts:       { color: "#f87171" }, controls:    { color: "#a78bfa" },
+  employs:     { color: "#a78bfa" }, manages:     { color: "#60a5fa" },
+  hosts:       { color: "#60a5fa" }, rescued:     { color: "#34d399" },
+  companion:   { color: "#f59e0b" }, causes:      { color: "#fb923c" },
+  exgf:        { color: "#94a3b8" }, leads:       { color: "#34d399" },
+  puppet:      { color: "#f87171" }, connected:   { color: "#78716c" },
+  quest:       { color: "#fb923c" }, joined:      { color: "#34d399" },
+  brokers:     { color: "#60a5fa" }, coerces:     { color: "#f87171" },
+  loved:       { color: "#fb923c" }, replaces:    { color: "#a78bfa" },
+  tricks:      { color: "#f87171" }, mentors:     { color: "#fde68a" },
 };
 
 const ROLE_EMOJI = {
-  "Crawler": "⚔️", "Mage": "🔮", "Healer": "💚", "Trickster": "🃏",
-  "Engineer": "⚙️", "Juggernaut": "🚛", "Summoner": "🌸", "Companion": "🐾",
-  "Caretaker": "🧑‍⚕️", "Resident": "👴", "Player Killer": "🗡️", "Boss": "💀",
-  "Show Host": "📺", "Host/Boss": "👑", "PR Agent": "📣", "Admin": "🖥️",
-  "Corp Entity": "🏢", "Elite NPC": "✨", "NPC": "🧙", "Survivor": "🏃",
-  "Pre-Dungeon": "💔", "Aerialist": "🐐", "Shepherd": "🌿", "Antagonist": "⚡",
-  "Medic": "🏥", "Hunter": "🎯", "Hunter Leader": "🪲", "Country Boss": "👸",
-  "Boss/Pet": "🐈", "Pet/Ally": "🦕", "Boss/Deity": "🕷️", "Deity": "⛩️",
+  "Crawler": "⚔️",  "Mage": "🔮",         "Healer": "💚",       "Trickster": "🃏",
+  "Engineer": "⚙️", "Juggernaut": "🚛",    "Summoner": "🌸",     "Companion": "🐾",
+  "Caretaker": "🧑‍⚕️","Resident": "👴",    "Player Killer": "🗡️","Boss": "💀",
+  "Show Host": "📺", "Host/Boss": "👑",     "PR Agent": "📣",     "Admin": "🖥️",
+  "Corp Entity": "🏢","Elite NPC": "✨",    "NPC": "🧙",          "Survivor": "🏃",
+  "Pre-Dungeon": "💔","Aerialist": "🐐",   "Shepherd": "🌿",     "Antagonist": "⚡",
+  "Medic": "🏥",     "Hunter": "🎯",       "Hunter Leader": "🪲","Country Boss": "👸",
+  "Boss/Pet": "🐈",  "Pet/Ally": "🦕",     "Boss/Deity": "🕷️",  "Deity": "⛩️",
 };
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
 
 function getNodeById(id) { return NODES.find(n => n.id === id); }
 
@@ -64,13 +145,23 @@ function computeArrow(from, to, r = 25) {
   return { x1, y1, x2, y2, mx, my };
 }
 
+// ─── Main component ────────────────────────────────────────────────────────
+
 export default function DCCDag() {
   const svgRef = useRef(null);
-  const [positions, setPositions] = useState(() => {
-    const m = {};
-    NODES.forEach(n => { m[n.id] = { x: n.x, y: n.y }; });
-    return m;
+  const [layout, setLayout] = useState("manual");
+  const [isComputing, setIsComputing] = useState(false);
+
+  // Positions: manual uses data.js coords; others are computed
+  const [positionsByLayout, setPositionsByLayout] = useState({
+    manual: (() => { const m = {}; NODES.forEach(n => { m[n.id] = { x: n.x, y: n.y }; }); return m; })(),
+    hierarchical: null,
+    force: null,
   });
+
+  // Per-layout user drag overrides
+  const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {} });
+
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [pan, setPan] = useState({ x: 0, y: 20 });
@@ -80,6 +171,43 @@ export default function DCCDag() {
   const dragging = useRef(null);
   const panStart = useRef(null);
   const isPanning = useRef(false);
+
+  // Compute layout when switching
+  useEffect(() => {
+    if (positionsByLayout[layout] !== null) return;
+    setIsComputing(true);
+    // Run in a timeout so the UI can show "computing" first
+    const tid = setTimeout(() => {
+      let computed;
+      const visNodes = NODES.filter(n => {
+        if (filterFaction !== "ALL" && n.faction !== filterFaction) return false;
+        if (filterBook !== "ALL" && n.book > Number(filterBook)) return false;
+        return true;
+      });
+      if (layout === "hierarchical") computed = hierarchicalPositions(NODES);
+      if (layout === "force")        computed = forceDirectedPositions(NODES, EDGES);
+      setPositionsByLayout(prev => ({ ...prev, [layout]: computed }));
+      setIsComputing(false);
+    }, 40);
+    return () => clearTimeout(tid);
+  }, [layout]);
+
+  // Recompute force layout when re-requested (shuffle button)
+  const reshuffleForce = useCallback(() => {
+    setIsComputing(true);
+    setPositionsByLayout(prev => ({ ...prev, force: null }));
+    setUserDrag(prev => ({ ...prev, force: {} }));
+  }, []);
+
+  // Merge computed base + user drag overrides
+  const positions = useMemo(() => {
+    const base = positionsByLayout[layout];
+    if (!base) return {};
+    const overrides = userDrag[layout] || {};
+    const merged = { ...base };
+    Object.entries(overrides).forEach(([id, pos]) => { merged[id] = pos; });
+    return merged;
+  }, [positionsByLayout, userDrag, layout]);
 
   const selectedNode = selected ? NODES.find(n => n.id === selected) : null;
   const activeId = hovered || selected;
@@ -98,7 +226,9 @@ export default function DCCDag() {
 
   const onNodeMouseDown = useCallback((e, id) => {
     e.stopPropagation();
-    dragging.current = { id, startX: e.clientX, startY: e.clientY, ox: positions[id].x, oy: positions[id].y };
+    const pos = positions[id];
+    if (!pos) return;
+    dragging.current = { id, startX: e.clientX, startY: e.clientY, ox: pos.x, oy: pos.y };
   }, [positions]);
 
   const onSvgMouseDown = useCallback((e) => {
@@ -112,7 +242,11 @@ export default function DCCDag() {
     const onMove = (e) => {
       if (dragging.current) {
         const { id, startX, startY, ox, oy } = dragging.current;
-        setPositions(p => ({ ...p, [id]: { x: ox + (e.clientX - startX) / zoom, y: oy + (e.clientY - startY) / zoom } }));
+        const newPos = { x: ox + (e.clientX - startX) / zoom, y: oy + (e.clientY - startY) / zoom };
+        setUserDrag(prev => ({
+          ...prev,
+          [layout]: { ...(prev[layout] || {}), [id]: newPos },
+        }));
       } else if (isPanning.current && panStart.current) {
         setPan({ x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y });
       }
@@ -121,7 +255,7 @@ export default function DCCDag() {
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [zoom]);
+  }, [zoom, layout]);
 
   const onWheel = useCallback((e) => {
     e.preventDefault();
@@ -134,6 +268,15 @@ export default function DCCDag() {
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, [onWheel]);
+
+  const switchLayout = useCallback((id) => {
+    setLayout(id);
+    setPan({ x: 0, y: 20 });
+    setZoom(id === "hierarchical" ? 0.48 : 0.72);
+    setSelected(null);
+  }, []);
+
+  const DEFAULT_ZOOM = { manual: 0.72, hierarchical: 0.48, force: 0.58 };
 
   return (
     <div style={{
@@ -184,7 +327,7 @@ export default function DCCDag() {
               <option key={k} value={k}>{v.label}</option>
             ))}
           </select>
-          <button onClick={() => { setPan({ x: 0, y: 20 }); setZoom(0.72); }}
+          <button onClick={() => { setPan({ x: 0, y: 20 }); setZoom(DEFAULT_ZOOM[layout]); }}
             style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#f59e0b", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
             Reset View
           </button>
@@ -198,6 +341,19 @@ export default function DCCDag() {
       </div>
 
       <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+        {/* Computing overlay */}
+        {isComputing && (
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 100,
+            background: "rgba(6,6,12,0.75)", backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexDirection: "column", gap: 12,
+          }}>
+            <div style={{ fontSize: 28, animation: "spin 1.2s linear infinite" }}>⬡</div>
+            <div style={{ fontSize: 13, color: "#f59e0b", letterSpacing: "0.12em" }}>COMPUTING LAYOUT…</div>
+          </div>
+        )}
+
         <svg ref={svgRef} style={{ flex: 1, display: "block", cursor: "grab" }}
           onMouseDown={onSvgMouseDown} onClick={() => setSelected(null)}>
           <defs>
@@ -209,6 +365,28 @@ export default function DCCDag() {
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
             <filter id="glow2"><feGaussianBlur stdDeviation="5.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           </defs>
+
+          {/* Story Arc column headers */}
+          {layout === "hierarchical" && (
+            <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
+              {[1,2,3,4,5,6].map(b => (
+                <g key={b}>
+                  <rect x={160 + (b-1)*300 - 110} y={20} width={220} height={62} rx={8}
+                    fill={`rgba(245,158,11,0.04)`} stroke="rgba(245,158,11,0.1)" strokeWidth={1} />
+                  <text x={160 + (b-1)*300} y={44} textAnchor="middle"
+                    fontSize={13} fontWeight="700" fill="#f59e0b" opacity={0.7}
+                    style={{ fontFamily: "Georgia,serif", letterSpacing: "0.08em" }}>
+                    BOOK {b}
+                  </text>
+                  <text x={160 + (b-1)*300} y={62} textAnchor="middle"
+                    fontSize={9} fill="#57534e" style={{ fontFamily: "monospace" }}>
+                    {NODES.filter(n => n.book === b).length} characters
+                  </text>
+                </g>
+              ))}
+            </g>
+          )}
+
           <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
             <rect x="-9999" y="-9999" width="22000" height="22000" fill="transparent" />
             {visibleEdges.map((e, i) => {
@@ -239,6 +417,7 @@ export default function DCCDag() {
             })}
             {visibleNodes.map(node => {
               const pos = positions[node.id];
+              if (!pos) return null;
               const fs = FACTION_STYLE[node.faction];
               const isSel = selected === node.id;
               const isHov = hovered === node.id;
@@ -302,12 +481,42 @@ export default function DCCDag() {
           {selectedNode && <Sidebar node={selectedNode} onSelect={setSelected} />}
         </div>
 
-        {/* Legend */}
+        {/* Legend + Layout switcher */}
         <div style={{
           position: "absolute", bottom: 14, left: 14,
-          background: "rgba(0,0,0,0.78)", backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.05)", borderRadius: 10, padding: "11px 13px",
+          background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "11px 13px",
+          minWidth: 168,
         }}>
+          {/* Layout toggle */}
+          <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Layout</div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {LAYOUTS.map(l => (
+                <button key={l.id}
+                  onClick={() => { if (l.id === "force" && layout === "force") reshuffleForce(); else switchLayout(l.id); }}
+                  title={l.id === "force" && layout === "force" ? "Click to reshuffle" : l.desc}
+                  style={{
+                    flex: 1, padding: "5px 4px", borderRadius: 6, cursor: "pointer",
+                    background: layout === l.id ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.04)",
+                    border: layout === l.id ? "1px solid rgba(245,158,11,0.55)" : "1px solid rgba(255,255,255,0.08)",
+                    color: layout === l.id ? "#f59e0b" : "#57534e",
+                    fontSize: 9, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                    transition: "all 0.15s",
+                  }}>
+                  <span style={{ fontSize: 13 }}>{l.icon}</span>
+                  <span style={{ letterSpacing: "0.04em", fontFamily: "monospace" }}>{l.label}</span>
+                </button>
+              ))}
+            </div>
+            {layout === "force" && (
+              <div style={{ fontSize: 9, color: "#44403c", textAlign: "center", marginTop: 5, fontFamily: "monospace" }}>
+                click Force again to reshuffle
+              </div>
+            )}
+          </div>
+
+          {/* Faction legend */}
           <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7 }}>Groups</div>
           {Object.entries(FACTION_STYLE).map(([k, v]) => (
             <div key={k} onClick={() => setFilterFaction(filterFaction === k ? "ALL" : k)}
@@ -335,26 +544,27 @@ export default function DCCDag() {
           {Math.round(zoom * 100)}%
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
+
+// ─── Sidebar components ────────────────────────────────────────────────────
 
 function Sidebar({ node, onSelect }) {
   const fs = FACTION_STYLE[node.faction];
   const outgoing = EDGES.filter(e => e.from === node.id);
   const incoming = EDGES.filter(e => e.to === node.id);
   const bookColor = node.book === 3 ? "#4ade80" : node.book === 2 ? "#a78bfa" : "#f59e0b";
-
   return (
     <div style={{ padding: 20, height: "100%", overflowY: "auto" }}>
       <div style={{ paddingBottom: 15, borderBottom: `1px solid ${fs.color}22`, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ fontSize: 26 }}>{ROLE_EMOJI[node.role] || "●"}</span>
-          <span style={{
-            fontSize: 10, padding: "2px 8px", borderRadius: 10,
-            background: `${bookColor}18`, color: bookColor,
-            border: `1px solid ${bookColor}33`, fontFamily: "monospace",
-          }}>Book {node.book}</span>
+          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${bookColor}18`, color: bookColor, border: `1px solid ${bookColor}33`, fontFamily: "monospace" }}>Book {node.book}</span>
         </div>
         <h2 style={{ margin: "0 0 7px", fontSize: 19, color: fs.color, lineHeight: 1.2 }}>{node.label}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 11 }}>
@@ -381,15 +591,9 @@ function EdgeGroup({ title, edges, dirKey, onSelect }) {
         const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
         return (
           <div key={i} onClick={() => onSelect(targetId)}
-            style={{
-              display: "flex", alignItems: "center", gap: 9,
-              padding: "7px 9px", borderRadius: 7, marginBottom: 4,
-              background: "rgba(255,255,255,0.025)",
-              border: `1px solid ${tfs.color}18`, cursor: "pointer",
-            }}
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, marginBottom: 4, background: "rgba(255,255,255,0.025)", border: `1px solid ${tfs.color}18`, cursor: "pointer" }}
             onMouseEnter={ev => ev.currentTarget.style.background = `${tfs.dim}44`}
-            onMouseLeave={ev => ev.currentTarget.style.background = "rgba(255,255,255,0.025)"}
-          >
+            onMouseLeave={ev => ev.currentTarget.style.background = "rgba(255,255,255,0.025)"}>
             <span style={{ fontSize: 13 }}>{ROLE_EMOJI[targetNode.role]}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12.5, color: tfs.color, fontWeight: 600 }}>{targetNode.label}</div>
@@ -397,11 +601,7 @@ function EdgeGroup({ title, edges, dirKey, onSelect }) {
                 <span style={{ color: es.color }}>{e.label}</span>{" · "}{tfs.label}
               </div>
             </div>
-            <span style={{
-              fontSize: 9, padding: "1px 5px", borderRadius: 8, fontFamily: "monospace",
-              background: targetNode.book === 3 ? "rgba(74,222,128,0.1)" : targetNode.book === 2 ? "rgba(167,139,250,0.1)" : "rgba(245,158,11,0.08)",
-              color: targetNode.book === 3 ? "#4ade80" : targetNode.book === 2 ? "#a78bfa" : "#78716c",
-            }}>B{targetNode.book}</span>
+            <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 8, fontFamily: "monospace", background: targetNode.book === 3 ? "rgba(74,222,128,0.1)" : targetNode.book === 2 ? "rgba(167,139,250,0.1)" : "rgba(245,158,11,0.08)", color: targetNode.book === 3 ? "#4ade80" : targetNode.book === 2 ? "#a78bfa" : "#78716c" }}>B{targetNode.book}</span>
           </div>
         );
       })}
@@ -411,9 +611,6 @@ function EdgeGroup({ title, edges, dirKey, onSelect }) {
 
 function Tag({ color, children }) {
   return (
-    <span style={{
-      fontSize: 9.5, padding: "2px 7px", borderRadius: 12,
-      background: `${color}13`, color, border: `1px solid ${color}28`,
-    }}>{children}</span>
+    <span style={{ fontSize: 9.5, padding: "2px 7px", borderRadius: 12, background: `${color}13`, color, border: `1px solid ${color}28` }}>{children}</span>
   );
 }
