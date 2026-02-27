@@ -206,6 +206,30 @@ const NODES = [
   // ── BACKSTORY ──
   { id: "beatrice", label: "Beatrice", book: 1, faction: "BACKSTORY", role: "Pre-Dungeon", x: 110, y: 200,
     desc: "Carl's ex-girlfriend, Donut's original owner. Presumed dead. Her absence shapes Carl's fierce protectiveness toward Donut." },
+
+  // ── BOOK 5: THE BUTCHER'S MASQUERADE (Floor 6 – The Hunting Grounds) ──
+  { id: "vrah", label: "Vrah", book: 5, faction: "ANTAGONISTS", role: "Hunter", x: 1200, y: 500,
+    desc: "Mantis hunter and veteran dungeon huntress. Mayor of Zockau on Floor 6. Decapitates kills and wears their heads; death count in the thousands. Starts a vendetta against Carl after he kills her sister Xindy. Stabbed by Carl with the Arrow of Enthusiastic Double Gonorrhea. Savaged to death by Mongo and Kiwi at the Butcher's Masquerade." },
+  { id: "xindy", label: "Xindy", book: 5, faction: "ANTAGONISTS", role: "Hunter", x: 1300, y: 450,
+    desc: "Vrah's younger sister. Dark Hive mantis hunter. Killed early in Floor 6 when Carl's party raids Zockau, triggering Vrah's furious vendetta." },
+  { id: "circe_took", label: "Circe Took", book: 5, faction: "ANTAGONISTS", role: "Hunter Leader", x: 1300, y: 600,
+    desc: "Minor mantis hive queen, mother of Vrah and Xindy. Panel moderator at CrawlCon. Enraged by Xindy's death; sponsors goddess Diwata to cure Vrah of the Arrow of Enthusiastic Double Gonorrhea. Uses influence to let hunters leave early after Borant loses control." },
+  { id: "diwata", label: "Diwata", book: 5, faction: "ANTAGONISTS", role: "Deity", x: 1200, y: 650,
+    desc: "Minor goddess sponsored by Circe Took onto Floor 6 to cure Vrah. Becomes a major threat at the Butcher's Masquerade. Killed by Donut's Laundry Day spell during the final battle." },
+  { id: "queen_imogen", label: "Queen Imogen", book: 5, faction: "ANTAGONISTS", role: "Country Boss", x: 1100, y: 580,
+    desc: "Level 145 high elf Fallen Cleric/Sorceress, Country Boss of Floor 6. Hosts the Butcher's Masquerade. Xenophobic queen who helped kill Signet's mother and tried to eradicate King Finian's half-blood children. Immune to poison and curse; susceptible to blunt force. Killed by Signet at the Masquerade — at the cost of Signet's own life." },
+  { id: "ferdinand", label: "Ferdinand (Gravy Boat)", book: 5, faction: "NPCS", role: "Boss/Pet", x: 1100, y: 460,
+    desc: "Yellow tomcat (real name Gravy Boat), Donut's unrequited pre-dungeon love interest, owned by neighbor Marjory Williams. Abducted and transformed into Level 100 Province Boss and Queen Imogen's familiar. Wields turban with lightning spell and phase-jump. Transported to Floor 9 with the castle; becomes co-Warlord of the NPC Home Team faction alongside Juice Box." },
+  { id: "kiwi", label: "Kiwi", book: 5, faction: "NPCS", role: "Pet/Ally", x: 280, y: 50,
+    desc: "Female mongoliensis dinosaur, Big Tina's mother. Originally a bear, transformed long ago by Scolopendra's attack. Mongo's romantic partner (to Donut's horror). Charmed by Apothecary's potion into becoming Donut's minion. Helps Mongo kill Vrah at the Masquerade. Transported to Floor 9 as part of the Princess Posse army." },
+  { id: "big_tina", label: "Big Tina", book: 5, faction: "NPCS", role: "Pet/Ally", x: 160, y: 50,
+    desc: "Giant allosaurus ballerina on Floor 6, Kiwi's daughter. Both were originally bears transformed long ago by Scolopendra. Sought by Carl's party as a quest target. Transported to Floor 9 as part of the Princess Posse army." },
+  { id: "eva", label: "Eva Sigrid", book: 2, faction: "CRAWLERS", role: "Player Killer", x: 830, y: 50,
+    desc: "Icelandic economics professor, Katia's former friend. Hekla's right-hand enforcer — her anger issues weaponized by her own therapist. Four-armed cobra-head race; 13+ Player Killer skulls. Abandons Katia in Book 2 during Floor 3 race selection. Central antagonist of Katia's arc in Book 5. Final act: places the Crown of the Sepsis Whore on Katia as she dies, binding Katia (or Donut) to the 9th floor." },
+  { id: "gideon", label: "Gideon", book: 5, faction: "CRAWLERS", role: "Crawler", x: 1160, y: 130,
+    desc: "Crawler who allies with Carl on Floors 5 and 6. Leads a team outside the elf castle during the Masquerade battle. Killed in the fighting — his death weighs on Carl, who recruited him." },
+  { id: "britney", label: "Britney", book: 5, faction: "CRAWLERS", role: "Crawler", x: 1160, y: 60,
+    desc: "Ukrainian plastic surgery patient turned crawler. Wears a fur bikini, carries a spiked stick, has an extinction sigil tattoo. Acts as Donut's guitarist at the Masquerade talent show with spectacular playing. Face badly scarred in the final battle. Later hinted by the goddess Eris to be possibly possessed." },
 ];
 
 const EDGES = [
@@ -346,6 +370,38 @@ const EDGES = [
   { from: "carl", to: "maggie", type: "killed", label: "kills with Mordecai's potion" },
   { from: "katia", to: "maggie", type: "allied", label: "petrifies possessed Chris" },
   { from: "samantha", to: "emberus", type: "connected", label: "involved in Geyrun's death" },
+
+  // Book 5 edges
+  // Hunters
+  { from: "carl", to: "xindy", type: "killed", label: "kills (triggers Vrah vendetta)" },
+  { from: "vrah", to: "xindy", type: "companion", label: "sisters" },
+  { from: "circe_took", to: "vrah", type: "companion", label: "mother" },
+  { from: "circe_took", to: "xindy", type: "companion", label: "mother" },
+  { from: "circe_took", to: "diwata", type: "allied", label: "sponsors" },
+  { from: "vrah", to: "carl", type: "hunts", label: "prime hunting target" },
+  { from: "vrah", to: "queen_imogen", type: "allied", label: "uses to inconvenience Carl" },
+  { from: "mongo", to: "vrah", type: "killed", label: "kills with Kiwi" },
+  { from: "kiwi", to: "vrah", type: "killed", label: "kills with Mongo" },
+  { from: "donut", to: "diwata", type: "killed", label: "Laundry Day spell" },
+  // Queen Imogen / Ferdinand / Castle
+  { from: "queen_imogen", to: "signet", type: "antagonizes", label: "killed Signet's mother" },
+  { from: "signet", to: "queen_imogen", type: "killed", label: "assassinates (sacrifices self)" },
+  { from: "queen_imogen", to: "ferdinand", type: "companion", label: "familiar/pet" },
+  { from: "ferdinand", to: "donut", type: "connected", label: "unrequited love interest" },
+  { from: "donut", to: "ferdinand", type: "connected", label: "pre-dungeon fixation" },
+  { from: "sledge", to: "ferdinand", type: "allied", label: "teleports castle to Floor 9" },
+  { from: "ferdinand", to: "juice_box", type: "allied", label: "co-Warlords Floor 9" },
+  // Kiwi / Tina / Mongo
+  { from: "mongo", to: "kiwi", type: "companion", label: "romantic partner" },
+  { from: "kiwi", to: "big_tina", type: "companion", label: "mother" },
+  { from: "donut", to: "kiwi", type: "companion", label: "charmed as minion" },
+  // Eva / Katia arc
+  { from: "hekla", to: "eva", type: "controls", label: "turned patient into enforcer" },
+  { from: "eva", to: "katia", type: "antagonizes", label: "player-kills, taunts, betrays" },
+  { from: "katia", to: "eva", type: "killed", label: "hunts down and kills" },
+  // Gideon / Britney
+  { from: "gideon", to: "carl", type: "allied", label: "recruited by Carl" },
+  { from: "britney", to: "donut", type: "allied", label: "Masquerade guitarist" },
 ];
 
 function getNodeById(id) { return NODES.find(n => n.id === id); }
@@ -461,7 +517,7 @@ export default function DCCDag() {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 3 }}>
-            {["ALL","1","2","3","4"].map(b => (
+            {["ALL","1","2","3","4","5"].map(b => (
               <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
                 style={{
                   background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
