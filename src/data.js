@@ -43,7 +43,7 @@ export const NODES = [
   { id: "hekla", label: "Hekla", book: 2, faction: "CRAWLERS", role: "Crawler", x: 720, y: 65,
     desc: "Leader of Brynhild's Daughters, top-2 leaderboard at end of Book 2. Contacts Carl to hand off Katia. In Book 3 her husband is shown dying from a cactus mob. Her arc grows darker — Odette warns Carl about her but is muted before finishing. Her true agenda with Katia becomes clear in later books." },
   { id: "lucia", label: "Lucia Mar", book: 2, faction: "CRAWLERS", role: "Crawler", x: 620, y: 65,
-    desc: "#1 leaderboard at end of Book 2. Lajabless race — beautiful by day, skull-faced by night. By Book 3 she is clearly overpowered; Mordecai suspects she accepted a deal to erase how she killed two admins. Kills Ifechi (Florin's partner) in a spell-reflection trap on Floor 4." },
+    desc: "#1 leaderboard at end of Book 2. Lajabless race — beautiful by day, skull-faced by night. Entered from Ecuador with two rottweiler dungeon familiars: Cici and Gustavo 3. By Book 3 she is clearly overpowered; Mordecai suspects she accepted a deal to erase how she killed two admins. Kills Ifechi (Florin's partner) in a spell-reflection trap on Floor 4. Florin later reveals Gustavo 3 is a Residual alien controlling her mind — she contains multiple personalities, including a ten-year-old Dutch girl named Jill." },
   { id: "quan", label: "Quan CH", book: 2, faction: "CRAWLERS", role: "Crawler", x: 500, y: 65,
     desc: "Opened his celestial box before Borant's VETO in Book 2. In Book 3 he has a celestial item granting flight, lightning bolts, and a full damage shield. Tries to interfere with Carl's Floor 4 endgame. On Floor 8 he follows Carl and Donut to Cuba, steals both stairwell keys in a three-way card battle. Killed by Donut. Final words: 'She'd be ashamed of what I've become.'" },
   // ── BOOK 3 NEW CRAWLERS ──
@@ -259,6 +259,21 @@ export const NODES = [
     desc: "Former crawler and author of the Dungeon Anarchist's Cookbook (7th Edition). Contributed only a single, devastating entry: 'I miss her. I miss her so goddamn much. Is it worth it? To survive this place with her gone? No.' Originally entered the dungeon as a pet of crawler Mistress Henspar, who gave him an enhanced pet biscuit. Returns to Floor 9 as a mercenary for the Operatic Collective faction — fighting against Carl. His actions have a very significant impact on the outcome of the war." },
   { id: "vinata", label: "Vinata", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 1030, y: 550,
     desc: "Naga princess and Warlord of the Blood Sultanate faction in Faction Wars. Glossy white with golden scales, cobra hood, six arms, solid red eyes — significantly larger than other nagas. The Blood Sultanate has historically escaped Faction Wars by having a bodyguard worship a light god to teleport to a Club Vanquisher temple. Vinata breaks tradition and does it herself, worshipping Khepri. Rosetta figures out the escape pattern and tells Carl. Carl, Katia, and Prepotente confront Vinata in the temple during Operation Snake Pit. She is revealed to be secretly wealthy despite the Naga system's supposed poverty." },
+  // ── Pets & Dungeon Familiars ──────────────────────────────────────────────
+  { id: "cici", label: "Cici", book: 2, faction: "CRAWLERS", role: "Pet/Familiar", x: 590, y: -30,
+    desc: "One of Lucia Mar's two rottweilers, entered the dungeon as her dungeon familiar from Ecuador. Equipped with a chainmail sweater. With Gustavo 3, kills two attendants and another pet in the Desperado Club playroom before breaking into the main floor — getting Lucia banned. Appeared to influence which of Lucia's personalities was in control. Killed by Donut's Hole Spell on Floor 5 ('She killed the wrong one,' Lucia wailed)." },
+
+  { id: "gustavo_3", label: "Gustavo 3", book: 2, faction: "CRAWLERS", role: "Pet/Familiar", x: 655, y: -30,
+    desc: "Lucia Mar's second rottweiler, entered from Ecuador. Shoots lightning when he barks. Particularly violent even by Lucia's standards — blocks crawlers from the Floor 4 stairwell and 'accidentally' slaughters Lucia's new friends on Floor 5. Florin later reveals Gustavo is actually a Residual (a hyperspatial alien parasite) remotely controlling Lucia's mind and switching between her personalities. Zev confirms: 'It's complicated, Carl.'" },
+
+  { id: "garret", label: "Garret (Sir Rendlegore)", book: 5, faction: "PARTY", role: "Pet/Familiar", x: 1195, y: 210,
+    desc: "A Tummy Acher (Colon Worm) — originally Tserendolgor's pet, received as a gift at CrawlCon. Originally parasitic worms from Jotan-class Titan intestines; excellent melee tanks. Unique mechanic: regenerates on death with a cumulative 25% stat buff, but every 5th death reverts to level 1, loses memories, and must be renamed. Has died 5 times by the time Carl receives him (stats buffed 125% but 5 random weaknesses). Tserendolgor bequeaths Garret to Carl before dying on Floor 8. Carl renames him Sir Rendlegore in her honour." },
+
+  { id: "lightning_lou", label: "Lightning Lou", book: 6, faction: "PARTY", role: "Pet/Familiar", x: 1380, y: 210,
+    desc: "An elderly bloodhound who lived alone at a gas station near the Shepherd's House in Homestead, Florida, inside the Floor 8 surface simulation of Earth. Carl encounters him while driving to the OIPAN Christmas breakfast — deeply moved by the dog left alone over Christmas. He dislodges Lou's collar trying to pet him. After finishing his mission, Carl asks Orren to teleport him back just to say goodbye before descending. Becomes Carl's dungeon familiar on Floor 9." },
+
+  { id: "gimli", label: "Gimli", book: 5, faction: "CRAWLERS", role: "Pet/Familiar", x: 1470, y: -30,
+    desc: "Osvaldo's Stone Hawk — a brown hawk with opalescent underwing feathers, trained to sit on Osvaldo's shoulder and capable of turning targets to stone. Presented at the Floor 6 Butcher's Masquerade Pet Show: Osvaldo explained Gimli had turned a hunter to stone the day before, then Osvaldo kicked the statue over ('I don't recommend it. I couldn't loot him.'). Survives the Queen Imogen fight but is immediately eaten by Bianca after Osvaldo loots the Memorial Crystal." },
 ];
 
 export const EDGES = [
@@ -521,5 +536,17 @@ export const EDGES = [
   { from: "vinata", to: "carl", type: "antagonizes", label: "Blood Sultanate Warlord" },
   { from: "rosetta_thagra", to: "vinata", type: "antagonizes", label: "exposes Naga temple-escape trick" },
   { from: "carl", to: "vinata", type: "antagonizes", label: "Operation Snake Pit / confronts in temple" },
+
+  // ── Pet / Familiar edges ──────────────────────────────────────────────────
+  { from: "lucia", to: "cici", type: "companion", label: "dungeon familiar" },
+  { from: "lucia", to: "gustavo_3", type: "companion", label: "dungeon familiar" },
+  { from: "donut", to: "cici", type: "killed", label: "kills with Hole Spell (B5)" },
+  { from: "gustavo_3", to: "lucia", type: "controls", label: "Residual — remotely controls her mind" },
+  { from: "tserendolgor", to: "garret", type: "companion", label: "pet (Tummy Acher)" },
+  { from: "tserendolgor", to: "carl", type: "companion", label: "bequeaths Garret before death" },
+  { from: "carl", to: "garret", type: "companion", label: "inherits / renames Sir Rendlegore" },
+  { from: "carl", to: "lightning_lou", type: "companion", label: "dungeon familiar (Floor 9)" },
+  { from: "osvaldo", to: "gimli", type: "companion", label: "pet Stone Hawk" },
+  { from: "bianca", to: "gimli", type: "killed", label: "eats Gimli after Masquerade" },
 
 ];

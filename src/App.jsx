@@ -306,7 +306,7 @@ const ROLE_EMOJI = {
   "Corp Entity": "🏢","Elite NPC": "✨",    "NPC": "🧙",          "Survivor": "🏃",
   "Pre-Dungeon": "💔","Aerialist": "🐐",   "Shepherd": "🌿",     "Antagonist": "⚡",
   "Medic": "🏥",     "Hunter": "🎯",       "Hunter Leader": "🪲","Country Boss": "👸",
-  "Boss/Pet": "🐈",  "Pet/Ally": "🦕",     "Boss/Deity": "🕷️",  "Deity": "⛩️",
+  "Boss/Pet": "🐈",  "Pet/Ally": "🦕",  "Pet/Familiar": "🐾",     "Boss/Deity": "🕷️",  "Deity": "⛩️",
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -327,6 +327,7 @@ function computeArrow(from, to, r = 25) {
 
 export default function DCCDag() {
   const svgRef = useRef(null);
+  const [page, setPage] = useState("dag"); // "dag" | "cookbook"
   const [layout, setLayout] = useState("manual");
   const [isComputing, setIsComputing] = useState(false);
 
@@ -487,40 +488,47 @@ export default function DCCDag() {
           <span style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 3 }}>
-            {["ALL","1","2","3","4","5","6","7"].map(b => (
-              <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
-                style={{
-                  background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
-                  border: filterBook === b ? "1px solid rgba(245,158,11,0.6)" : "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 6, color: filterBook === b ? "#f59e0b" : "#78716c",
-                  padding: "4px 10px", fontSize: 12, cursor: "pointer",
-                }}>
-                {b === "ALL" ? "All Books" : `Book ${b}`}
-              </button>
-            ))}
-          </div>
-          <select value={filterFaction} onChange={e => { setFilterFaction(e.target.value); setSelected(null); }}
-            style={{ background: "#111", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#e2d9c8", padding: "4px 9px", fontSize: 12, cursor: "pointer" }}>
-            <option value="ALL">All Groups</option>
-            {Object.entries(FACTION_STYLE).map(([k, v]) => (
-              <option key={k} value={k}>{v.label}</option>
-            ))}
-          </select>
-          <button onClick={() => { setPan({ x: 0, y: 20 }); setZoom(DEFAULT_ZOOM[layout]); }}
-            style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#f59e0b", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
-            Reset View
-          </button>
-          {selected && (
-            <button onClick={() => setSelected(null)}
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#a8a29e", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
-              ✕ Clear
+          {page === "dag" && <>
+            <div style={{ display: "flex", gap: 3 }}>
+              {["ALL","1","2","3","4","5","6","7"].map(b => (
+                <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
+                  style={{
+                    background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
+                    border: filterBook === b ? "1px solid rgba(245,158,11,0.6)" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 6, color: filterBook === b ? "#f59e0b" : "#78716c",
+                    padding: "4px 10px", fontSize: 12, cursor: "pointer",
+                  }}>
+                  {b === "ALL" ? "All Books" : `Book ${b}`}
+                </button>
+              ))}
+            </div>
+            <select value={filterFaction} onChange={e => { setFilterFaction(e.target.value); setSelected(null); }}
+              style={{ background: "#111", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#e2d9c8", padding: "4px 9px", fontSize: 12, cursor: "pointer" }}>
+              <option value="ALL">All Groups</option>
+              {Object.entries(FACTION_STYLE).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </select>
+            <button onClick={() => { setPan({ x: 0, y: 20 }); setZoom(DEFAULT_ZOOM[layout]); }}
+              style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#f59e0b", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
+              Reset View
             </button>
-          )}
+            {selected && (
+              <button onClick={() => setSelected(null)}
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#a8a29e", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
+                ✕ Clear
+              </button>
+            )}
+          </>}
+          <button onClick={() => setPage(p => p === "cookbook" ? "dag" : "cookbook")}
+            style={{ background: page === "cookbook" ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.04)", border: page === "cookbook" ? "1px solid rgba(245,158,11,0.45)" : "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: page === "cookbook" ? "#f59e0b" : "#78716c", padding: "4px 12px", fontSize: 12, cursor: "pointer", letterSpacing: "0.04em" }}>
+            📖 Cookbook Authors
+          </button>
         </div>
       </div>
 
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+      {page === "cookbook" && <CookbookPage />}
+      {page === "dag" && <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
         {/* Computing overlay */}
         {isComputing && (
           <div style={{
@@ -724,7 +732,7 @@ export default function DCCDag() {
         }}>
           {Math.round(zoom * 100)}%
         </div>
-      </div>
+      </div>}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -733,7 +741,399 @@ export default function DCCDag() {
   );
 }
 
-// ─── Sidebar components ────────────────────────────────────────────────────
+// ─── Cookbook Authors Page ─────────────────────────────────────────────────
+
+const AUTHORS = [
+  {
+    ed: 1, suffix: "st", name: "[Unknown]", race: "Unknown", isUnknown: true,
+    season: "Unknown — predates 15th season",
+    contributions: "The first edition was seeded by the System AI and given to Porthus disguised as a blank sketchbook on Floor 9 during the 15th season. Porthus describes its contents as \"meager, mostly-useless recipes.\" No author is named.",
+    status: "unknown", statusNote: "",
+    whereabouts: "No record exists. The book may have been self-created by the System AI.",
+    b7: false,
+  },
+  {
+    ed: 2, suffix: "nd", name: "Dr. Porthus Hu", race: "High Elf (chosen)",
+    season: "15th season of Dungeon Crawler World",
+    contributions: "Chose High Elf race and Rogue class. Received the 1st edition as a blank sketchbook on Floor 9 and added to it before taking a 100-year indentured servitude Exit Deal at Floor 11. Wrote: \"I can only promise two things. Eventual death. And eventual justice.\"",
+    status: "alive", statusNote: "Active OIPAN CEO as of Book 7",
+    whereabouts: "Free post-indentureship. Founded OIPAN (Open Intellect Pacifist Action Network) and serves as CEO. Sponsored Carl's second slot on Floor 5, sent the Toraline and the legendary custom xistera extension. In Book 7, sponsors the entire cookbook-author cohort to enter Faction Wars for the Princess Posse.",
+    b7: false,
+  },
+  {
+    ed: 3, suffix: "rd", name: "Dante", race: "Crocodilian",
+    season: "Unknown — post-15th season",
+    contributions: "Kept his Crocodilian race on Floor 3. Trap specialist. Took an Exit Deal at the 11th Floor; became a Game Guide and Guildhall Instructor in the Trap Master Guild. Was forcibly reassigned — against his will — to ice castle guard duty alongside Justice Light (8th Edition) during a flightless mantid crawl.",
+    status: "dead", statusNote: "Executed by Borant for insubordination",
+    whereabouts: "Killed by administrative action for refusing orders during the ice castle reassignment. Died while still under indentureship.",
+    b7: false,
+  },
+  {
+    ed: 4, suffix: "th", name: "Tipid", race: "Crest",
+    season: "Thousands of years ago",
+    contributions: "Thousands of years ago. His defining entries document the trauma of descending a stairwell alone via the Mysterious Bone Key Benefit, leaving his best friend Horatio behind to die. Wrote only about survival, guilt, and loss. \"I always knew I would die in the dungeon. Even after I got out, I always knew.\" Took a 12th Floor Exit Deal; served as Poisoner Guild instructor.",
+    status: "unknown", statusNote: "Fought in Faction Wars; fate unclear",
+    whereabouts: "Observed Floor 8's end with Rosetta aboard the Homecoming Queen. In Book 7, entered Floor 9 as a Colonel in the Princess Posse army. Status after Faction Wars not confirmed.",
+    b7: true,
+  },
+  {
+    ed: 5, suffix: "th", name: "Everly", race: "Arthropod (likely — mentions \"chitin\")",
+    season: "Thousands of cycles ago",
+    contributions: "Member of the Desperado Club. Led a diverse party with paid mercenaries from the Merc Guild and a Club Vanquisher healer. Wrote extensively on hiring mercs, daily rates, and team dynamics. Her sponsor (Dictum Waystation Controls) earned her trust with one gift — then killed her with the next, a sabotaged Benefactor Box arriving on Floor 8. Drakea noted: \"She did not mention the manner in which she was set up, which is unfortunate.\"",
+    status: "dead", statusNote: "Killed by a booby-trapped Benefactor Box",
+    whereabouts: "Killed on Floor 8 by a sponsor-delivered trap. A cautionary tale for every author after her about trusting sponsors.",
+    b7: false,
+  },
+  {
+    ed: 6, suffix: "th", name: "Milk", race: "Half-frog / half-bat hybrid",
+    season: "Unknown",
+    contributions: "Primary expertise: portals, mapmaking, and ink recipes. Her entry on toraline-based ink was the key clue Rosetta tried to hint to Carl on Shadow Boxer. Drew still the most accurate map of Larracos (Floor 9) in the entire cookbook. Confirmed stairwell mechanics (validated by Herot). Responded to Rosetta's entries in agreement. Earned at least one player-killer skull.",
+    status: "alive", statusNote: "Freed by Prepotente; present at Faction Wars",
+    whereabouts: "Was trapped for 50+ seasons as unwilling Guildmaster of the Calligraphy and Cartography Guilds inside a hidden section of Club Vanquisher. In Book 7, Prepotente discovers and rescues her. She gives Carl the Adept's Fountain Pen. Present for Faction Wars.",
+    b7: true,
+  },
+  {
+    ed: 7, suffix: "th", name: "Volteeg", race: "Unknown (entered as a pet)",
+    season: "Unknown",
+    contributions: "One of the most haunting authors. Wrote only a single entry: \"I miss her. I miss her so goddamn much. Is it worth it? To survive this place with her gone? No. No, I don't think it is.\" The subject was Mistress Henspar, who brought Volteeg into the dungeon as a pet via an enhanced biscuit. Drakea: \"This is Volteeg's first, last, and only entry in the cookbook. Fuck everything about this place.\" Took a 10th Floor Exit Deal; worked as guard at the Rampart Guild.",
+    status: "unknown", statusNote: "Fought for Operatic Collective; fate unclear",
+    whereabouts: "Returned to Floor 9 in Book 7 as a mercenary for the Operatic Collective — fighting against the Princess Posse. Gets a full POV chapter. His actions had a very significant impact on the outcome of Faction Wars.",
+    b7: true,
+  },
+  {
+    ed: 8, suffix: "th", name: "Justice Light", race: "Skyfowl",
+    season: "Unknown. Reached level 89",
+    contributions: "Wrote extensively on traps, trap design, and trap shops. One of the most morally tortured authors — haunted by killing an NPC in anger: \"I have become what I hate.\" This experience drove his entire philosophy. Was assigned ice castle guard duty alongside Dante (3rd Edition); Dante was killed for refusing orders. Took an 11th Floor Exit Deal; became a Game Guide and Guildhall Instructor.",
+    status: "dead", statusNote: "Sacrificed himself — triggered Scolopendra's awakening",
+    whereabouts: "Returned in Book 7. Built elaborate defensive traps for the FUPA during Faction Wars. His final act: stayed behind on Floor 9 as others descended, and triggered his Legendary Trap. The resulting System Messages ended: \"Scolopendra has awakened.\"",
+    b7: true,
+  },
+  {
+    ed: 9, suffix: "th", name: "Rosetta Thagra", race: "Crest",
+    season: "Two seasons before Mordecai's crawl",
+    contributions: "\"Was a big fan of blowing things up.\" Wrote explosives recipes, fairy warnings, and extensive entries about systemic dungeon injustice. Responded to Milk's rants in agreement. After indentureship: created the documentary The Other Side of the Glass; hosts OIPAN-funded talk show Shadow Boxer. In Book 6, interviewed Carl and Donut and covertly steered Carl toward the toraline clue.",
+    status: "unknown", statusNote: "Alive entering Faction Wars; fate post-parlay unclear",
+    whereabouts: "Entered Floor 9 as a Crest Barnburner for the Princess Posse. Figured out the Naga Blood Sultanate's temple-escape pattern (Vinata). Her defining act: assassinated King Rust during his parlay with Carl — personal revenge for him killing her teammate by lassoing them through a portal. Status after the assassination unclear.",
+    b7: true,
+  },
+  {
+    ed: 10, suffix: "th", name: "York", race: "Unknown",
+    season: "Unknown",
+    contributions: "A poet. Wrote pages of rambling philosophical essays Carl could barely parse. Opened with: \"You are me. That is who this book finds.\" Fought a lifelong battle against emotional numbness he developed in the crawl — volunteering for horrific missions just to feel something. Blew up a ship of children (including the new orc king) in the chaos after Faction Wars without feeling anything. Took a 10th Floor Exit Deal; worked as Game Guide and Guildhall Instructor in the Poetry Guild.",
+    status: "unknown", statusNote: "Last known: OIPAN Captain; no Book 7 appearance",
+    whereabouts: "Exited the dungeon. Spent years in self-reflection. Became a Captain in the resistance organisation later known as OIPAN. No appearance in Book 7.",
+    b7: false,
+  },
+  {
+    ed: 11, suffix: "th", name: "Ikicha", race: "Yenk (castrated male)",
+    season: "Unknown — icy Sixth Floor Hunting Grounds",
+    contributions: "His season featured cold, icy Hunting Grounds. Known for philosophical writing, including the famous phrase Drakea later quoted: \"The burning Yenk needs only to embrace their enemies.\" His final entry, cryptic to other authors, almost certainly describes encountering a loved one resurrected as a dungeon Boss: \"The sight of him, twisted and changed, speaking with that same voice that once said such sweet words... It broke me.\"",
+    status: "dead", statusNote: "Confirmed dead by Drakea",
+    whereabouts: "Drakea confirms Ikicha died in the dungeon. Wrote a long memorial for him.",
+    b7: false,
+  },
+  {
+    ed: 12, suffix: "th", name: "Batbilge", race: "Unknown",
+    season: "Unknown",
+    contributions: "Very little is known. Allister (13th Edition) noted Batbilge's entry as their last, and warned future authors never to have the cookbook on their person while using the marketplace — strongly implying Batbilge was caught with it.",
+    status: "dead", statusNote: "Likely killed — cookbook discovery suspected",
+    whereabouts: "Presumed killed, possibly because the cookbook was discovered. Allister's cautionary note is the only record.",
+    b7: false,
+  },
+  {
+    ed: 13, suffix: "th", name: "Allister", race: "Unknown (uses T'Ghee cards for religion)",
+    season: "Unknown",
+    contributions: "The cookbook took the form of T'Ghee Cards for Allister, fitting his meditation-based religion. Wrote about backpacks, inventory mechanics, vampires (Floor 7), and most importantly: a detailed entry on the Semeru Dwarves of Floor 9 and their mysterious goddess (later confirmed as Ysalte). His backpack entry directly inspired Carl's design of Katia's Doppelgänger mass-boost backpack. Also wrote the single clearest description of Scolopendra and its nine-tier past attack on the 6th Floor world. Took an 11th Floor Exit Deal.",
+    status: "unknown", statusNote: "Post-indentureship; no Book 7 appearance",
+    whereabouts: "Post-indentureship fate unspecified. Likely free. No Book 7 appearance.",
+    b7: false,
+  },
+  {
+    ed: 14, suffix: "th", name: "Priestly", race: "Unknown",
+    season: "Unknown",
+    contributions: "Wrote what Drakea called the single best source of information about Floor 9 Faction Wars in the entire cookbook. Loved music and was enchanted by the beauty of Larracos. Was conscripted via a Bugbear Faction's Conscript Spell and forced to march against the Skull Empire. Watched the once-beautiful city he loved be leveled and fellow crawlers slaughtered. His mind broke.",
+    status: "dead", statusNote: "Suicide — unable to endure the destruction of Larracos",
+    whereabouts: "Drakea records that Priestly did not make it back to the battle after seeing what had been done to Larracos. He committed suicide before returning to the city.",
+    b7: false,
+  },
+  {
+    ed: 15, suffix: "th", name: "Sinjin", race: "Unknown (paw-bearing race)",
+    season: "Unknown",
+    contributions: "Wrote bomb-crafting entries: a level-3 sapper's table for bomb infusion; soaking a Hobgoblin Smoke Curtain in healing potion to mass-kill undead. Also wrote bitterly about worshipping the goddess Kuraokami, whose (male soother) sponsor treated Sinjin's devotion as if directed at him personally. \"Worst decision ever.\" Deity rules required touching every corpse with ice once a day.",
+    status: "dead", statusNote: "Killed by Kuraokami for trying to leave the faith",
+    whereabouts: "Killed by the dungeon goddess Kuraokami after attempting to abandon the faith.",
+    b7: false,
+  },
+  {
+    ed: 16, suffix: "th", name: "Herot", race: "Unknown alien",
+    season: "Unknown",
+    contributions: "Wrote a long, convoluted essay on NPCs — arguing self-awareness is contagious among them, and that quests become easier when you break the fourth wall. Wrote about the bellowing tall creatures of the 6th Floor Hunting Grounds. Hypothesized that fan interest shifts after Floor 9 toward the Ascendency Wars. Confirmed Milk's stairwell entries as still accurate. Note: pronouns for Herot shift between books — \"her\" (B3), \"he\" (B4), \"she\" (B5/B6) — the wiki uses they/them.",
+    status: "unknown", statusNote: "",
+    whereabouts: "No confirmed death. No Book 7 appearance. Fate unknown.",
+    b7: false,
+  },
+  {
+    ed: 17, suffix: "th", name: "Azin", race: "Unknown",
+    season: "Unknown — kite birds on 6th Floor Hunting Grounds",
+    contributions: "Described the kite birds flying overhead on the 6th Floor Hunting Grounds in their season. Wrote about berserking mechanics — specifically group berserking — which Carl references directly in Book 7 when explaining mantaur mob behavior. Also wrote about indestructible NPCs. Appears to have developed arachnophobia at some point, which Tin found funny until they didn't.",
+    status: "unknown", statusNote: "",
+    whereabouts: "No confirmed death. No Book 7 appearance. Fate unknown.",
+    b7: false,
+  },
+  {
+    ed: 18, suffix: "th", name: "Ossie", race: "Unknown",
+    season: "Unknown",
+    contributions: "Wrote philosophically about the dungeon as a \"reused canvas painted over and over again.\" Observed that all bopca NPCs share the same origin story — aliens offering their people a \"chance\" to live in the dungeon — and hypothesized their true station is higher than it appears. Also wrote practical entries on creating fear and confusion among enemy forces: \"If you want to create fright amongst an otherwise stalwart enemy, confusion is always the key.\"",
+    status: "unknown", statusNote: "",
+    whereabouts: "No confirmed death. No Book 7 appearance. Fate unknown.",
+    b7: false,
+  },
+  {
+    ed: 19, suffix: "th", name: "Coolie", race: "Unknown",
+    season: "Dungeon Crawler World: Qurux — appeared on multiple Syndicate programs",
+    contributions: "Popular crawler, appeared on multiple Syndicate programs during their crawl. Wrote extensively on gods, deity summonings (voluntary and involuntary), and production chamber security and forcefields. Described Eris and Apito as the \"big ones\" always sponsored in Ascendency Wars. Carl credits her directly in Book 7: \"Coolie. I know you can't read this, but I used your passage to plan the first step... I did it for you and for a little girl named Bonnie.\"",
+    status: "dead", statusNote: "Killed attempting to assassinate two Dungeon Admins",
+    whereabouts: "Killed in an assassination attempt against two Dungeon Admins. Her last view was of her home planet.",
+    b7: false,
+  },
+  {
+    ed: 20, suffix: "th", name: "Forkith", race: "Urgyle-seeded alien",
+    season: "Unknown",
+    contributions: "Entered the dungeon with his sister Barkith. Chose the Sapper class. Wrote detailed notes on the 6th Floor Hunting Grounds map, political landscape, and monster variability between seasons. Tested Rosetta's (9th Edition) unstable-bomb-backpack trick — it no longer worked. Barkith was killed in the resulting explosion. Left detailed instructions on how to properly append notes to cookbook entries, standardising the format for all future authors. Vowed to kill a god for Barkith.",
+    status: "unknown", statusNote: "Reached 11th Floor; post-indentureship fate unclear",
+    whereabouts: "Reached at least the 11th Floor. No confirmed death. No Book 7 appearance.",
+    b7: false,
+  },
+  {
+    ed: 21, suffix: "st", name: "Tin", race: "Unknown",
+    season: "Unknown",
+    contributions: "Made one of the most strategically important observations in the cookbook: gods are Soul Armor — when aliens inhabit a god's body they do so like armor, meaning they can theoretically be ejected by any spell designed to remove biological armor (e.g. \"Take That Shit Off\", \"Laundry Day Spell\"), reverting the god to its natural state. Also underwent a famous two-part arachnophobia arc: initial entry: \"I think they're cute\" — follow-up entry days later: \"Never mind. Holy shit, never mind. Fuck spiders.\"",
+    status: "unknown", statusNote: "",
+    whereabouts: "No confirmed death. No Book 7 appearance. Fate unknown.",
+    b7: false,
+  },
+  {
+    ed: 22, suffix: "nd", name: "Drakea", race: "Bune",
+    season: "Last Naga-produced season, 250+ cycles ago",
+    contributions: "Added more notes and annotations to the cookbook than any other author — responding to almost every entry, memorialising lost authors, and leaving guidance for future readers. Chose a rogue/magic class and a trap-focused subclass. Burned with hatred for the Naga from firsthand witness of their cruelty. Wrote Justice Light a letter of forgiveness for his NPC killing. Requested future authors document everything in detail.",
+    status: "dead", statusNote: "Confirmed dead — Carl eulogises him in Book 7",
+    whereabouts: "Dead. Confirmed by Carl in a Book 7 entry written directly to Drakea: \"I know that you're dead, Drakea, but I haven't forgotten how much you hated the naga... I hope you watched from the other side.\"",
+    b7: false,
+  },
+  {
+    ed: 23, suffix: "rd", name: "[Unknown]", race: "Unknown", isUnknown: true,
+    season: "Unknown",
+    contributions: "The 23rd edition exists — confirmed by the numbering gap between Drakea (22nd) and Rickard (24th) — but no author has been named or identified through Book 7.",
+    status: "unknown", statusNote: "",
+    whereabouts: "No record exists.",
+    b7: false,
+  },
+  {
+    ed: 24, suffix: "th", name: "Rickard", race: "Unknown",
+    season: "Unknown",
+    contributions: "Entered the dungeon with his pregnant wife. Almost nothing else is recorded about Rickard's contributions through Book 7. The emotional weight of this detail is left to the reader.",
+    status: "unknown", statusNote: "",
+    whereabouts: "No further information available through Book 7.",
+    b7: false,
+  },
+  {
+    ed: 25, suffix: "th", name: "Carl", race: "Human (Earth) → Changeling",
+    season: "Earth's first (and last) season of Dungeon Crawler World",
+    contributions: "The current edition and only human author. Took Drakea's advice to document everything — including full combat plans, floor strategies, personal reflections, and tributes to lost authors. Unique in openly weaponising the cookbook as a tool of active resistance. His entries span Books 3–7. Key entries: Loita assassination plan, the Butcher's Masquerade trap, Operation Ruin, Floor 9 preparation notes, Scolopendra observations.",
+    status: "alive", statusNote: "Descended to Floor 10 — Book 8 forthcoming",
+    whereabouts: "Alive. End of Book 7: descended to Floor 10 with Donut and the Princess Posse. Married (revealed by Eris). Pied Piper Spell made permanent. Scolopendra has awakened.",
+    b7: true,
+  },
+];
+
+const STATUS_CONFIG = {
+  alive:   { label: "Alive",   color: "#22c55e", bg: "rgba(34,197,94,0.09)",   border: "rgba(34,197,94,0.28)" },
+  dead:    { label: "Dead",    color: "#ef4444", bg: "rgba(239,68,68,0.09)",    border: "rgba(239,68,68,0.28)" },
+  unknown: { label: "Unknown", color: "#78716c", bg: "rgba(120,113,108,0.09)", border: "rgba(120,113,108,0.28)" },
+};
+
+function CookbookPage() {
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [expanded, setExpanded] = useState(null);
+
+  const filtered = AUTHORS.filter(a => {
+    if (filterStatus !== "ALL" && a.status !== filterStatus) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return a.name.toLowerCase().includes(q) || a.contributions.toLowerCase().includes(q) || a.race.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const totals = {
+    alive: AUTHORS.filter(a => a.status === "alive").length,
+    dead: AUTHORS.filter(a => a.status === "dead").length,
+    unknown: AUTHORS.filter(a => a.status === "unknown").length,
+    b7: AUTHORS.filter(a => a.b7).length,
+  };
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 22px 60px" }}>
+
+        {/* Page header */}
+        <div style={{ marginBottom: 22, paddingBottom: 18, borderBottom: "1px solid rgba(245,158,11,0.12)" }}>
+          <div style={{ fontSize: 11, color: "#44403c", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+            Reference
+          </div>
+          <h1 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.05em", textShadow: "0 0 28px rgba(245,158,11,0.35)" }}>
+            ⚡ The Dungeon Anarchist's Cookbook
+          </h1>
+          <p style={{ margin: "0 0 16px", fontSize: 12.5, color: "#78716c", lineHeight: 1.7, maxWidth: 680 }}>
+            Created by the System AI in the 15th season. Passed to crawlers meeting unknown criteria.
+            Neither audience nor production can see its contents. Disappears on death or retirement.
+            25 known editions. Most of its authors did not survive.
+          </p>
+          {/* Stat row */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {[
+              { label: "Editions",       val: 25,           col: "#f59e0b" },
+              { label: "Named Authors",  val: 23,           col: "#e2d9c8" },
+              { label: "Confirmed Dead", val: totals.dead,  col: "#f87171" },
+              { label: "Confirmed Alive",val: totals.alive, col: "#34d399" },
+              { label: "Active in B7",   val: totals.b7,    col: "#a78bfa" },
+            ].map(s => (
+              <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${s.col}22`, borderRadius: 8, padding: "7px 14px", minWidth: 80, textAlign: "center" }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: s.col, lineHeight: 1 }}>{s.val}</div>
+                <div style={{ fontSize: 9.5, color: "#57534e", marginTop: 3, letterSpacing: "0.05em" }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Filter bar */}
+        <div style={{ display: "flex", gap: 7, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search name, race, contributions…"
+            style={{
+              flex: 1, minWidth: 180,
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 7, color: "#e2d9c8", padding: "6px 11px", fontSize: 12,
+              outline: "none", fontFamily: "Georgia,'Times New Roman',serif",
+            }}
+          />
+          {["ALL","alive","dead","unknown"].map(s => (
+            <button key={s} onClick={() => setFilterStatus(s)} style={{
+              background: filterStatus === s ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.04)",
+              border: filterStatus === s ? "1px solid rgba(245,158,11,0.45)" : "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 6, color: filterStatus === s ? "#f59e0b" : "#78716c",
+              padding: "5px 12px", fontSize: 12, cursor: "pointer",
+            }}>
+              {s === "ALL" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+          <span style={{ fontSize: 10, color: "#3c3834", marginLeft: 2 }}>{filtered.length}/{AUTHORS.length}</span>
+        </div>
+
+        {/* Author cards */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {filtered.map(a => {
+            const sc = STATUS_CONFIG[a.status];
+            const isOpen = expanded === a.ed;
+            return (
+              <div key={a.ed}
+                style={{
+                  background: isOpen ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.028)",
+                  border: `1px solid ${isOpen ? "rgba(245,158,11,0.22)" : "rgba(255,255,255,0.07)"}`,
+                  borderLeft: isOpen ? `3px solid ${sc.color}` : "3px solid transparent",
+                  borderRadius: 8, overflow: "hidden", transition: "background 0.15s, border-color 0.15s",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "rgba(255,255,255,0.038)"; }}
+                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "rgba(255,255,255,0.028)"; }}
+                onClick={() => setExpanded(isOpen ? null : a.ed)}>
+
+                {/* Collapsed row */}
+                <div style={{ display: "grid", gridTemplateColumns: "52px 1fr auto", alignItems: "center", gap: 12, padding: "11px 14px" }}>
+                  {/* Edition badge */}
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", lineHeight: 1 }}>{a.ed}</div>
+                    <div style={{ fontSize: 9, color: "#44403c", letterSpacing: "0.04em" }}>{a.suffix} ed.</div>
+                  </div>
+
+                  {/* Name + race */}
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: a.isUnknown ? "#44403c" : "#e2d9c8", fontStyle: a.isUnknown ? "italic" : "normal" }}>
+                        {a.name}
+                      </span>
+                      {a.b7 && (
+                        <span style={{ fontSize: 9, background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 4, padding: "1px 6px", letterSpacing: "0.06em" }}>
+                          BOOK 7
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 10.5, color: "#57534e", marginTop: 1 }}>
+                      {a.race !== "Unknown" && <span>{a.race}</span>}
+                      {a.race !== "Unknown" && a.season && <span style={{ color: "#3c3834" }}> · </span>}
+                      {a.season && <span style={{ fontStyle: "italic", color: "#3c3834" }}>{a.season}</span>}
+                    </div>
+                  </div>
+
+                  {/* Status + chevron */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ fontSize: 10.5, padding: "2px 8px", borderRadius: 5, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+                        {sc.label}
+                      </span>
+                      {a.statusNote && (
+                        <div style={{ fontSize: 9.5, color: sc.color, opacity: 0.65, marginTop: 2, maxWidth: 200, textAlign: "right" }}>
+                          {a.statusNote}
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 14, color: "#44403c", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</span>
+                  </div>
+                </div>
+
+                {/* Expanded detail */}
+                {isOpen && (
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "14px 16px 16px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }} className="cb-grid">
+                      <div>
+                        <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7 }}>
+                          Contributions &amp; Crawl Notes
+                        </div>
+                        <p style={{ margin: 0, fontSize: 12.5, color: "#c4bcb2", lineHeight: 1.75 }}>{a.contributions}</p>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7 }}>
+                          Whereabouts — End of Book 7
+                        </div>
+                        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.75, color: a.status === "dead" ? "#f87171" : a.status === "alive" ? "#34d399" : "#78716c", opacity: 0.9 }}>
+                          {a.whereabouts}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer note */}
+        <div style={{ marginTop: 28, padding: "12px 16px", background: "rgba(255,255,255,0.02)", borderRadius: 7, border: "1px solid rgba(255,255,255,0.05)", fontSize: 11, color: "#3c3834", lineHeight: 1.8, fontStyle: "italic" }}>
+          The 1st Edition has no confirmed author. The 23rd Edition exists (gap between Drakea's 22nd and Rickard's 24th) but its author is unnamed through Book 7.
+          Status reflects known facts as of <em style={{ color: "#44403c" }}>This Inevitable Ruin</em> (Book 7).
+        </div>
+      </div>
+
+      <style>{`
+        .cb-grid { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 640px) { .cb-grid { grid-template-columns: 1fr !important; } }
+        input::placeholder { color: #3c3834; }
+      `}</style>
+    </div>
+  );
+}
 
 function Sidebar({ node, onSelect }) {
   const fs = FACTION_STYLE[node.faction];
