@@ -119,8 +119,8 @@ export const NODES = [
   { id: "chaco", label: "Chaco the Bard", book: 3, faction: "NPCS", role: "Show Host", x: 550, y: 670,
     desc: "Former crawler from Mordecai's season. Now hosts The Prize Carousel dungeon minigame — winged, wolf-headed man in a checkered leisure suit. Killed Mordecai's brother Uzzi on Odette's instruction to get the floor key before the timer ran out. Mordecai attacks him on sight in Book 3 (earning a 7-day safe-room time-out). Deeply remorseful but bound to silence. His warning to Carl: 'They always make you turn on your party.'" },
   // ── BOOK 4 NEW NODES ──
-  { id: "juice_box", label: "Juice Box", book: 4, faction: "NPCS", role: "NPC", x: 120, y: 700,
-    desc: "Changeling NPC prostitute at Hump Town's inn on Floor 5. Henrik's sister. Deeply loyal to her changeling family. Becomes a critical ally to Carl and the Royal Court — helps save Hump Town from bombardment. Later goes to Floor 9 as an aquatic form to rally NPC factions. Eventually co-warlord of the NPC faction. Gets engaged to Louis." },
+  { id: "juice_box", label: "Juice Box", book: 4, faction: "NPCS", role: "Elite NPC", x: 120, y: 700,
+    desc: "Changeling NPC prostitute, sister of Henrik. Former teacher in a previous crawl — all her students were killed due to a disease. First encountered on Floor 4. Has spent the crawl quietly awakening other NPCs to self-awareness. Rescued by Carl when he saves Hump Town. On Floor 9 (Book 7), becomes co-Warlord of Team Retribution alongside Ferdinand — the first self-aware NPC army. Marries Louis to seal the Princess Posse alliance; she genuinely loves him, which baffles Louis entirely. Wields her Unwashed form — the personification of death — to terrify the Warlord Council. Uncovers the Epitome Tagg body-sharing mystery inside Louis." },
   { id: "henrik", label: "Henrik", book: 4, faction: "NPCS", role: "NPC", x: 50, y: 700,
     desc: "Changeling and Juice Box's brother. Holds one of the three pocket-watch pieces of the Gate of the Feral Gods artifact. Carl must retrieve his piece to assemble the Gate." },
   { id: "mrs_ghazi", label: "Mrs. Ghazi", book: 4, faction: "NPCS", role: "Boss", x: 360, y: 750,
@@ -178,8 +178,8 @@ export const NODES = [
     desc: "Minor goddess sponsored by Circe Took onto Floor 6 to cure Vrah. Becomes a major threat at the Butcher's Masquerade. Killed by Donut's Laundry Day spell during the final battle." },
   { id: "queen_imogen", label: "Queen Imogen", book: 5, faction: "ANTAGONISTS", role: "Country Boss", x: 1100, y: 580,
     desc: "Level 145 high elf Fallen Cleric/Sorceress, Country Boss of Floor 6. Hosts the Butcher's Masquerade. Xenophobic queen who helped kill Signet's mother and tried to eradicate King Finian's half-blood children. Immune to poison and curse; susceptible to blunt force. Killed by Signet at the Masquerade — at the cost of Signet's own life." },
-  { id: "ferdinand", label: "Ferdinand (Gravy Boat)", book: 5, faction: "NPCS", role: "Boss/Pet", x: 1100, y: 460,
-    desc: "Yellow tomcat (real name Gravy Boat), Donut's unrequited pre-dungeon love interest, owned by neighbor Marjory Williams. Abducted and transformed into Level 100 Province Boss and Queen Imogen's familiar. Wields turban with lightning spell and phase-jump. Transported to Floor 9 with the castle; becomes co-Warlord of the NPC Home Team faction alongside Juice Box." },
+  { id: "ferdinand", label: "Ferdinand (Gravy Boat)", book: 5, faction: "NPCS", role: "Host/Boss", x: 760, y: 530,
+    desc: "A real-world neighborhood cat (true name: Gravy Boat) who lived outside Carl's Seattle apartment — Donut's unrequited pre-dungeon love. Entered the dungeon via the High Elf Castle on Floor 6. On Floor 9 (Book 7), becomes co-Warlord of Team Retribution alongside Juice Box, playing the role of avatar for Larracos's city defense system. Commands Simoom, a level-75 armored battle rhino with glowing red eyes, and fires powerful lightning bolts. His supreme feline confidence and utter refusal to accept 'no' are played entirely straight. Donut has Complicated Feelings." },
   { id: "kiwi", label: "Kiwi", book: 5, faction: "NPCS", role: "Pet/Ally", x: 280, y: 50,
     desc: "Female mongoliensis dinosaur, Big Tina's mother. Originally a bear, transformed long ago by Scolopendra's attack. Mongo's romantic partner (to Donut's horror). Charmed by Apothecary's potion into becoming Donut's minion. Helps Mongo kill Vrah at the Masquerade. Transported to Floor 9 as part of the Princess Posse army." },
   { id: "big_tina", label: "Big Tina", book: 5, faction: "NPCS", role: "Pet/Ally", x: 160, y: 50,
@@ -225,10 +225,6 @@ export const NODES = [
   { id: "heyzoos", label: "HeyZoos (Uzi Jesus)", book: 6, faction: "NPCS", role: "Boss/Deity", x: 1350, y: 440,
     desc: "Unique undead T'Ghee Card from Ecuador. Level 140 ranged healer totem. Catchphrase: 'I am the way, motherfucker.' Can resurrect other totems and turn blood into lead. One of Carl's most memorable card captures." },
   // ── Book 7 ────────────────────────────────────────────────────────────────
-  { id: "juice_box", label: "Juice Box", book: 7, faction: "NPCS", role: "Elite NPC", x: 650, y: 550,
-    desc: "Changeling NPC, sister of Henrik. Former teacher in a past crawl. Has been awakening other NPCs to self-awareness throughout the crawl. On Floor 9 becomes co-Warlord of Team Retribution (the self-aware NPC faction) alongside Ferdinand. Marries Louis in a swift ceremony to seal the Princess Posse alliance. Uses her Unwashed form — a cosmic dread entity — to shock the Warlord Council. Genuinely in love with Louis." },
-  { id: "ferdinand", label: "Ferdinand", book: 7, faction: "NPCS", role: "Host/Boss", x: 760, y: 550,
-    desc: "A real-world cat (true name: Gravy Boat) who lived outside Carl's Seattle apartment — Donut's unrequited pre-dungeon love. Entered Floor 9 as a player-controlled avatar for Larracos's city defense system. Co-Warlord of Team Retribution. Commands Simoom, a level-75 armored battle rhino, and fires powerful lightning bolts. His supreme feline confidence and total refusal to accept 'no' are played entirely straight. Donut has Complicated Feelings." },
   { id: "architect_houston", label: "Architect Houston", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 920, y: 680,
     desc: "Warlord of the Viceroy faction (The Madness). Philosophically obsessed with death and the 'Beautiful Place.' Militarily the most sophisticated opponent Carl faces. Cheats using outside intel from the live feed. Engineered the Ceasefire-ending cascade by colluding with Stockade. Shows disturbing fascination with Juice Box's Unwashed form." },
   { id: "d_nadia", label: "Empress D'Nadia", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 1020, y: 620,
@@ -241,6 +237,28 @@ export const NODES = [
     desc: "Goddess of Chaos. Elf-like with serpentine features, forked tongue, spiral tattoo on her lips, black-and-white coat over glowing Valkyrie armor. Summoned by battlefield conditions at the Masquerade. Her proximity makes one god-effect on Carl permanent — the Pied Piper Spell lands instead of the Meatus curse. Tells Carl three critical facts: that he is married, that the War Mage Rebellion sold the Gate, and that Britney is possessed. Prime contender for the Ascendant Throne. Appears outside the dungeon in the epilogue." },
   { id: "eileithyia", label: "Eileithyia", book: 7, faction: "NPCS", role: "Deity", x: 460, y: 510,
     desc: "Goddess of Childbirth and Female Pain, sponsored by Huanxin Jinx. Unusually benevolent. Her boon orchid offers triple constitution, Floor 12 transfer, or pregnancy. In Book 7 Katia consumes it and chooses pregnancy — Louis becomes the biological father. Has marked Carl as a friend of the church. Her retainer Yemaya re-ascended on Floor 8." },
+  // ── Skull Empire (introduced Book 1-2, major Book 7 role) ────────────────
+  { id: "king_rust", label: "King Rust", book: 2, faction: "ANTAGONISTS", role: "Antagonist", x: 1080, y: 220,
+    desc: "King of the Skull Empire, husband of Queen Consort Ugloo, father of Maestro, Prince Stalwart, and Princess Formidable. Has been in Earth orbit since the Second Floor. Disowned Maestro over the Pork Boy Snick and Stalwart over the pop-star assassination botch. On Floor 9 (Book 7), personally leads his army in Faction Wars. Calls a surprise parlay with Carl under a protection bubble, reveals his daughter Formidable is threatening the Failsafe, asks Carl to help stop her in exchange for an army retreat — Carl agrees. Immediately assassinated by Rosetta Thagra before he can relay the ceasefire order. His death destabilizes the Skull Empire succession." },
+  { id: "formidable", label: "Princess Formidable", book: 2, faction: "ANTAGONISTS", role: "Antagonist", x: 1100, y: 300,
+    desc: "Princess of the Skull Empire, sister of Maestro and Prince Stalwart, daughter of King Rust and Queen Consort Ugloo. First appeared Book 2. Sponsored Katia Grim on Floor 4. Becomes heir after both brothers are disowned or presumed dead. In Book 7, threatens to forcibly activate the Earth system Failsafe — triggering King Rust's desperate parlay with Carl. After her father is assassinated, she becomes the primary succession flashpoint in Skull Empire politics. Rapidly elevated toward the throne following Stalwart's promotion to King." },
+  // ── OIPAN / cookbook author network (B4 first physical presence) ─────────
+  { id: "porthus", label: "Dr. Porthus Hu", book: 4, faction: "CRAWLERS", role: "Ally", x: 1250, y: 180,
+    desc: "Former crawler (15th season), author of the Dungeon Anarchist's Cookbook (2nd Edition). Now CEO of OIPAN (Open Intellect Pacifist Action Network). Has been watching Carl since the Fourth Floor. Secures Carl's second sponsorship slot at enormous cost; sends him the Toraline and the custom xistera extension — the most expensive benefactor box in game history. In Book 7, sponsors a group of former crawlers including Rosetta, Tipid, and Justice Light to enter the dungeon and fight for the Princess Posse in Faction Wars." },
+  // ── Returning former crawlers (Shadow Boxer / Faction Wars) ───────────────
+  { id: "rosetta_thagra", label: "Rosetta Thagra", book: 6, faction: "CRAWLERS", role: "Ally", x: 800, y: 180,
+    desc: "Former crawler and author of the Dungeon Anarchist's Cookbook (9th Edition). A Crest who 'was a big fan of blowing things up' during her crawl, two seasons before Mordecai's. Served an indentureship deal, then created the documentary The Other Side of the Glass and hosts the OIPAN-funded weekly talk show Shadow Boxer. First physical appearance: interviews Carl and Donut on Shadow Boxer in Book 6, covertly steering Carl toward the toraline. In Book 7, enters Faction Wars as a Crest Barnburner. Her defining act: she had a personal vendetta against King Rust — he killed a teammate by lassoing them through a portal — and assassinates him during his parlay with Carl, ruining the ceasefire deal. Also figures out the Naga's secret temple-escape trick (Vinata)." },
+  { id: "tipid", label: "Tipid", book: 6, faction: "CRAWLERS", role: "Ally", x: 860, y: 130,
+    desc: "Former crawler (Crest race) and author of the Dungeon Anarchist's Cookbook (4th Edition). Thousands of years ago, was partners with his best friend Horatio in the dungeon; was forced by the Mysterious Bone Key Benefit to descend the stairwell alone, leaving Horatio to die. That guilt haunts every entry he wrote. Completed an indentureship as a Poisoner Guild instructor. Observed with Rosetta from orbit at the end of Floor 8. In Book 7, enters Faction Wars as a Colonel in the Princess Posse army. Always knew he would die in the dungeon." },
+  // ── Book 7 only ────────────────────────────────────────────────────────────
+  { id: "milk", label: "Milk", book: 7, faction: "CRAWLERS", role: "Ally", x: 720, y: 150,
+    desc: "Former crawler (half-frog half-bat hybrid race) and author of the Dungeon Anarchist's Cookbook (6th Edition). Wrote extensively about portals, mapmaking, and ink recipes including one using the toraline — the key secret Rosetta was trying to hint to Carl about on Shadow Boxer. Has been trapped as guildmaster of two hidden guilds (Calligraphy and Cartography) in Club Vanquisher for over 50 seasons, losing hope. In Book 7, Prepotente discovers her during Operation Snake Pit and has an emotional 'she's my sister, I'm her brother' moment — they rescue her. Milk gives Carl the Adept's Fountain Pen." },
+  { id: "justice_light", label: "Justice Light", book: 7, faction: "CRAWLERS", role: "Ally", x: 780, y: 90,
+    desc: "Skyfowl former crawler and author of the Dungeon Anarchist's Cookbook (8th Edition). Wrote extensively about traps and warned future crawlers of 'trap shops.' Haunted by killing an NPC in anger — wrote movingly about it in the cookbook and considered it the moment he became something he hated. Took an Exit Deal and worked as a Game Guide alongside Dante, both reassigned to ice castle guard duty and Dante killed for refusing orders. Returns for Book 7 Faction Wars, building elaborate traps to protect the FUPA. His defining act: stays behind on Floor 9 when the others descend, triggers his Legendary Trap — the resulting System Messages end with 'Scolopendra has awakened.'" },
+  { id: "volteeg", label: "Volteeg", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 950, y: 760,
+    desc: "Former crawler and author of the Dungeon Anarchist's Cookbook (7th Edition). Contributed only a single, devastating entry: 'I miss her. I miss her so goddamn much. Is it worth it? To survive this place with her gone? No.' Originally entered the dungeon as a pet of crawler Mistress Henspar, who gave him an enhanced pet biscuit. Returns to Floor 9 as a mercenary for the Operatic Collective faction — fighting against Carl. His actions have a very significant impact on the outcome of the war." },
+  { id: "vinata", label: "Vinata", book: 7, faction: "ANTAGONISTS", role: "Antagonist", x: 1030, y: 550,
+    desc: "Naga princess and Warlord of the Blood Sultanate faction in Faction Wars. Glossy white with golden scales, cobra hood, six arms, solid red eyes — significantly larger than other nagas. The Blood Sultanate has historically escaped Faction Wars by having a bodyguard worship a light god to teleport to a Club Vanquisher temple. Vinata breaks tradition and does it herself, worshipping Khepri. Rosetta figures out the escape pattern and tells Carl. Carl, Katia, and Prepotente confront Vinata in the temple during Operation Snake Pit. She is revealed to be secretly wealthy despite the Naga system's supposed poverty." },
 ];
 
 export const EDGES = [
@@ -473,5 +491,35 @@ export const EDGES = [
   // Katia / Epitome body mystery
   { from: "juice_box", to: "louis", type: "rescued", label: "rescues from Reaver castle / finds Epitome inside" },
   { from: "epitome_tagg", to: "louis", type: "controls", label: "body-sharing mystery: found inside Louis" },
+
+
+  // ── Skull Empire family ───────────────────────────────────────────────────
+  { from: "king_rust", to: "maestro", type: "connected", label: "father / disowned" },
+  { from: "king_rust", to: "stalwart", type: "connected", label: "father" },
+  { from: "king_rust", to: "formidable", type: "connected", label: "father" },
+  { from: "formidable", to: "carl", type: "antagonizes", label: "threatens Failsafe" },
+  { from: "king_rust", to: "carl", type: "connected", label: "parlay / asks for help (Book 7)" },
+  { from: "rosetta_thagra", to: "king_rust", type: "killed", label: "assassinates him during parlay" },
+  // ── Rosetta / cookbook network ─────────────────────────────────────────────
+  { from: "porthus", to: "rosetta_thagra", type: "allied", label: "OIPAN funds Shadow Boxer" },
+  { from: "porthus", to: "tipid", type: "allied", label: "sponsors into Faction Wars" },
+  { from: "porthus", to: "justice_light", type: "allied", label: "sponsors into Faction Wars" },
+  { from: "porthus", to: "carl", type: "allied", label: "OIPAN sponsor / sends toraline + xistera" },
+  { from: "rosetta_thagra", to: "carl", type: "allied", label: "Shadow Boxer / joins Princess Posse" },
+  { from: "rosetta_thagra", to: "mordecai", type: "allied", label: "cookbook authors / collaborate on Shi Maria tattoo" },
+  { from: "rosetta_thagra", to: "milk", type: "connected", label: "fellow cookbook authors / responds to each other's entries" },
+  { from: "rosetta_thagra", to: "tipid", type: "allied", label: "observed Floor 8 from orbit together" },
+  { from: "rosetta_thagra", to: "justice_light", type: "allied", label: "fellow cookbook authors / Princess Posse" },
+  { from: "tipid", to: "carl", type: "allied", label: "Colonel in Princess Posse army" },
+  { from: "justice_light", to: "carl", type: "allied", label: "builds traps for FUPA / stays behind" },
+  { from: "justice_light", to: "juice_box", type: "allied", label: "persuaded to help Princess Posse (Book 7 chapter)" },
+  { from: "milk", to: "carl", type: "allied", label: "gives Adept's Fountain Pen" },
+  { from: "milk", to: "prepotente", type: "rescued", label: "Prepotente rescues her from Club Vanquisher" },
+  { from: "milk", to: "rosetta_thagra", type: "connected", label: "cookbook authors — Rosetta hints at 'Milk' on Shadow Boxer" },
+  // ── Volteeg / Vinata (Book 7 antagonists) ─────────────────────────────────
+  { from: "volteeg", to: "carl", type: "antagonizes", label: "mercenary for Operatic Collective vs Princess Posse" },
+  { from: "vinata", to: "carl", type: "antagonizes", label: "Blood Sultanate Warlord" },
+  { from: "rosetta_thagra", to: "vinata", type: "antagonizes", label: "exposes Naga temple-escape trick" },
+  { from: "carl", to: "vinata", type: "antagonizes", label: "Operation Snake Pit / confronts in temple" },
 
 ];

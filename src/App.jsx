@@ -162,6 +162,8 @@ export const PROMINENCE = {
   remex: 3, drakea: 2, porthus: 2, herot: 2,
   rosetta_thagra: 2, milk: 2,
   epitome_tagg: 2,
+  king_rust: 4, formidable: 3, porthus: 4,
+  rosetta_thagra: 5, tipid: 3, milk: 3, justice_light: 4, volteeg: 3, vinata: 3,
   // fill any remaining with 1.5
 };
 
