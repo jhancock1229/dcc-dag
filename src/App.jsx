@@ -155,11 +155,54 @@ const NODES = [
     desc: "Skyfowl NPC. Approaches Carl and Donut in the Desperado Club, triggering the murder-mystery quest. Found dead with a guard pass and a blood-covered necromancy letter." },
   { id: "heather", label: "Heather the Bear", book: 2, faction: "NPCS", role: "Boss", x: 150, y: 360,
     desc: "Haunted, parasite-infested bear from Grimaldi's circus. Carl mercy-kills her — burning the parasites away first — enabling Signet to complete her spell." },
-  { id: "samantha", label: "Samantha", book: 1, faction: "NPCS", role: "NPC", x: 240, y: 650,
-    desc: "Dungeon NPC shopkeeper. Darkly comic. Trades gear and info for a price. Present on multiple floors." },
+  { id: "samantha", label: "Samantha", book: 4, faction: "NPCS", role: "Deity", x: 240, y: 650,
+    desc: "Withering Spirit Psamathe — banished minor deity of unrequited love. Inhabits a decapitated latex sex doll head found in Carl's inventory. Vulgar, loud, and shockingly perceptive. Her daughter Mrs. Ghazi is a sand ooze Floor 5 Borough Boss. Joins Royal Court on Floor 5 after Carl pokes her teeth. Plans to find a real body and reunite with her king on the 12th floor." },
+  // ── BOOK 3 NPCs (continued) ──
+  { id: "chaco", label: "Chaco the Bard", book: 3, faction: "NPCS", role: "Show Host", x: 550, y: 670,
+    desc: "Former crawler from Mordecai's season. Now hosts The Prize Carousel dungeon minigame — winged, wolf-headed man in a checkered leisure suit. Killed Mordecai's brother Uzzi on Odette's instruction to get the floor key before the timer ran out. Mordecai attacks him on sight in Book 3 (earning a 7-day safe-room time-out). Deeply remorseful but bound to silence. His warning to Carl: 'They always make you turn on your party.'" },
+  // ── BOOK 4 NEW NODES ──
+  { id: "juice_box", label: "Juice Box", book: 4, faction: "NPCS", role: "NPC", x: 120, y: 700,
+    desc: "Changeling NPC prostitute at Hump Town's inn on Floor 5. Henrik's sister. Deeply loyal to her changeling family. Becomes a critical ally to Carl and the Royal Court — helps save Hump Town from bombardment. Later goes to Floor 9 as an aquatic form to rally NPC factions. Eventually co-warlord of the NPC faction. Gets engaged to Louis." },
+  { id: "henrik", label: "Henrik", book: 4, faction: "NPCS", role: "NPC", x: 50, y: 700,
+    desc: "Changeling and Juice Box's brother. Holds one of the three pocket-watch pieces of the Gate of the Feral Gods artifact. Carl must retrieve his piece to assemble the Gate." },
+  { id: "mrs_ghazi", label: "Mrs. Ghazi", book: 4, faction: "NPCS", role: "Boss", x: 360, y: 750,
+    desc: "Samantha's daughter and a sand ooze Floor 5 Borough Boss (Level 52). Created by Samantha's union with King Blaine. Devoted protector. Samantha believes she was killed in the bubble's acid, which causes Samantha to offer her daughter's organs to save Louis — but Mrs. Ghazi likely survived to Floor 9." },
+  // Book 4 deities
+  { id: "orthrus", label: "Orthrus", book: 4, faction: "SYSTEM", role: "Deity", x: 420, y: 750,
+    desc: "A feral god who turns out to be a massive puppy — not the terrifying beast everyone feared. Summoned when Carl and Katia are forced to use the Gate of the Feral Gods to escape the ocean floor. Gentle and confused rather than malevolent. Carl bonds with him and works to keep him safe from his enraged divine father Emberus." },
+  { id: "emberus", label: "Emberus", book: 4, faction: "ANTAGONISTS", role: "Deity", x: 120, y: 580,
+    desc: "Angry and cruel god. Father of Orthrus's deceased owner. Arrives on Floor 5 to reclaim Orthrus after Carl summons him via the Gate, threatening thousands of crawlers. Carl uses Donut's Meathook scroll to lure Orthrus to Emberus, resolving the crisis — but Samantha may have been involved in killing Geyrun, which complicates things with him." },
+  { id: "algos", label: "Algos", book: 4, faction: "ANTAGONISTS", role: "Deity", x: 60, y: 490,
+    desc: "Ancient god of pain. Maggie My (possessing Chris) attempts to summon Algos using a Celestial Grenade during a Floor 5 confrontation. Katia petrifies the possessed Chris and Donut drops him into the Subterranean quadrant to prevent the summoning." },
+  { id: "denise", label: "Denise", book: 4, faction: "ANTAGONISTS", role: "Boss", x: 120, y: 490,
+    desc: "Feral goose goddess — Air castle boss on Floor 5. Completely immune to direct attacks. Carl defeats her by jamming her into the kitchen sink's garbage disposal grinder, since she is immune to attacks but not to the environment." },
+  { id: "commandant_kane", label: "Commandant Kane", book: 4, faction: "ANTAGONISTS", role: "Boss", x: 50, y: 590,
+    desc: "Holds one of the three Gate of the Feral Gods pocket-watch pieces. Carl must defeat or retrieve the piece from him to assemble the complete artifact." },
   // ── BOOK 3 DUNGEON NPCs ──
   { id: "growler_gary", label: "Growler Gary", book: 3, faction: "NPCS", role: "NPC", x: 430, y: 670,
     desc: "Gnoll bartender at a Floor 4 safe room called The Downward Dog. Refers to himself exclusively in third person ('Growler Gary thinks...') — except in very serious moments when he says 'I,' which signals the conversation has become genuinely grave." },
+  // ── BOOK 4 NEW CRAWLERS ──
+  { id: "tserendolgor", label: "Tserendolgor (Ren)", book: 4, faction: "CRAWLERS", role: "Crawler", x: 1160, y: 270,
+    desc: "Mongolian former runway model turned flamethrower-wielding Dog Soldier. Race: Dog Soldier. Class: Crisper. Wields an enchanted flamethrower named 'Velma.' Enters the dungeon to rescue friends and family. Donut constantly harasses her over her dog-themed race. Allied with Meadow Lark on Floor 4. On Floor 5, Emberus mistakes her bubble for Orthrus — he pounds on the wall screaming while her entire world melts. Survives. Dies on Floor 8, donating her gear and pet Garret (a Tummy Acher) to Carl. Her sacrifice becomes a symbol: 'You're more than just a person. You're our hope.'" },
+  // ── BOOK 4 SYSTEM/SYNDICATE ──
+  { id: "orren", label: "Orren", book: 4, faction: "SYSTEM", role: "Admin", x: 600, y: 720,
+    desc: "Syndicate Liaison — a Gondii parasitic worm inhabiting a fishbowl of liquid mounted on a mechanical body. Carl's 'vice principal.' First appears investigating Loita's death on Floor 5, constructing an elaborate (mostly accurate) picture of Carl's guilt. Manages negotiations between Borant, the System AI, and crawlers. Negotiates the Gate of the Feral Gods handover deal. Morally complicated — liaisons are required to be independent of their race, and Orren takes it seriously." },
+  { id: "quasar", label: "Quasar", book: 4, faction: "SYSTEM", role: "Admin", x: 700, y: 720,
+    desc: "Carl's Nullian lawyer — looks like a stereotypical Area 51 alien (gray, large eyes, bulbous head) in a tan suit with a hula girl tie. Nullians are rare in Syndicate space. Immediately annoying to Orren. Negotiates Carl's deal with Orren for the Gate of the Feral Gods, securing mercenary bodyguards and the Zerzura spell in exchange. Informs Carl that crawlers become full Syndicate citizens at Floor 10." },
+  // ── BOOK 4 NPC BODYGUARDS (Desperado Club) ──
+  { id: "sledge", label: "The Sledge", book: 4, faction: "NPCS", role: "NPC", x: 310, y: 730,
+    desc: "7-foot Cretin bodyguard in a tuxedo at the Desperado Club. Donut's personal favorite. Close friends with Bomo. Hired as permanent Royal Court security after failing to stop an assassination attempt on Donut (Carl requested them instead of retribution). Buys a magic protection spell with his own money specifically to protect Donut. On Floor 6, crashes a Twister into a turret and teleports Queen Imogen's entire castle to Floor 9 using the Zerzura spell. Last words: 'No let Bomo beat my Frogger score.'" },
+  { id: "bomo", label: "Bomo", book: 4, faction: "NPCS", role: "NPC", x: 200, y: 730,
+    desc: "Cretin bodyguard at the Desperado Club, close friends with Sledge. Hired alongside Sledge as permanent Royal Court security. Both become mercenary bodyguards as part of the Gate of the Feral Gods exchange deal with Orren. Assigned as Bomo throughout the crawl." },
+  { id: "very_sullen", label: "Very Sullen", book: 4, faction: "NPCS", role: "NPC", x: 110, y: 730,
+    desc: "Third Cretin bodyguard from the Desperado Club. Thinner face than the others, tiny emotionless dot eyes. Rarely speaks. Hired specifically to guard Katia on Floor 5, then becomes her full-time mercenary bodyguard from Floor 6 onward. Part of the Gate deal with Orren." },
+  { id: "clay_ton", label: "Clay-ton", book: 3, faction: "NPCS", role: "NPC", x: 440, y: 730,
+    desc: "Fourth Cretin bodyguard from the Desperado Club. First hired as personal security for Elle McGibbons (due to her leaderboard status) on Floor 4. Becomes a mercenary bodyguard as part of the Gate deal. On Floor 6 assigned by Carl to protect Chris Andrews." },
+  // ── BOOK 4 DEITIES ──
+  { id: "hellik", label: "Hellik", book: 4, faction: "SYSTEM", role: "Deity", x: 520, y: 750,
+    desc: "God of Sun and Life. Twin brother of Emberus. Named in Floor 5 quests as the prime suspect in Geyrun's murder — though he was in divine council when it happened. Emberus tasks Carl with killing him (with smite if Carl reaches Floor 18 without completing it). Later reveals himself to Carl as unexpectedly friendly, denies the murder, and asks Carl to convince Emberus to ally against Nekhebit." },
+  { id: "geyrun", label: "Geyrun", book: 4, faction: "BACKSTORY", role: "Pre-Dungeon", x: 1160, y: 200,
+    desc: "Emberus's deceased favorite son and original owner of Orthrus the puppy. Murdered by an unknown assailant before the story begins — Emberus blinded himself in grief. His death sets off the entire Floor 5 divine crisis: Emberus comes for Orthrus, tasks Carl with the 'Find Out Who Killed My Son' and 'Kill Hellik' quests, and the murder mystery runs through subsequent books." },
   // ── BACKSTORY ──
   { id: "beatrice", label: "Beatrice", book: 1, faction: "BACKSTORY", role: "Pre-Dungeon", x: 110, y: 200,
     desc: "Carl's ex-girlfriend, Donut's original owner. Presumed dead. Her absence shapes Carl's fierce protectiveness toward Donut." },
@@ -260,6 +303,49 @@ const EDGES = [
   { from: "lucia", to: "carl", type: "antagonizes", label: "marks Carl & Donut" },
   { from: "hekla", to: "katia", type: "mentors", label: "true agenda (covert)" },
   { from: "gwendolyn", to: "ronaldo", type: "connected", label: "argue in crawler chat" },
+  // Book 4 edges
+  // Tserendolgor
+  { from: "tserendolgor", to: "carl", type: "allied", label: "ally / symbol of hope" },
+  { from: "tserendolgor", to: "imani", type: "allied", label: "Meadow Lark ally" },
+  { from: "emberus", to: "tserendolgor", type: "antagonizes", label: "mistakes for Orthrus" },
+  // Orren & Quasar
+  { from: "orren", to: "carl", type: "controls", label: "investigates / regulates" },
+  { from: "quasar", to: "carl", type: "allied", label: "Carl's lawyer" },
+  { from: "quasar", to: "orren", type: "antagonizes", label: "legal adversary" },
+  { from: "orren", to: "borant", type: "employs", label: "Syndicate liaison" },
+  // Bodyguards
+  { from: "sledge", to: "donut", type: "protected", label: "dedicated bodyguard" },
+  { from: "sledge", to: "bomo", type: "allied", label: "close friends" },
+  { from: "bomo", to: "carl", type: "protected", label: "Royal Court security" },
+  { from: "very_sullen", to: "katia", type: "protected", label: "permanent bodyguard" },
+  { from: "clay_ton", to: "elle", type: "protected", label: "hired by Elle" },
+  { from: "clay_ton", to: "chris", type: "protected", label: "assigned by Carl" },
+  // Hellik / Geyrun
+  { from: "hellik", to: "emberus", type: "antagonizes", label: "suspected of killing Geyrun" },
+  { from: "geyrun", to: "orthrus", type: "companion", label: "original owner" },
+  { from: "emberus", to: "geyrun", type: "companion", label: "beloved son (deceased)" },
+  // Chaco
+  { from: "chaco", to: "mordecai", type: "antagonizes", label: "killed Mordecai's brother Uzzi" },
+  { from: "odette", to: "chaco", type: "controls", label: "instructed to kill Uzzi" },
+  // Samantha
+  { from: "carl", to: "samantha", type: "companion", label: "wakes / reluctant allies" },
+  { from: "samantha", to: "carl", type: "companion", label: "joins Royal Court" },
+  { from: "samantha", to: "mrs_ghazi", type: "companion", label: "mother/daughter" },
+  { from: "juice_box", to: "henrik", type: "allied", label: "siblings" },
+  { from: "juice_box", to: "louis", type: "allied", label: "engaged to" },
+  { from: "carl", to: "juice_box", type: "allied", label: "saves Hump Town / allies" },
+  { from: "juice_box", to: "carl", type: "allied", label: "key NPC ally" },
+  { from: "carl", to: "henrik", type: "quest", label: "retrieves Gate piece from" },
+  { from: "carl", to: "commandant_kane", type: "quest", label: "retrieves Gate piece from" },
+  { from: "carl", to: "orthrus", type: "companion", label: "summons / protects" },
+  { from: "emberus", to: "orthrus", type: "companion", label: "pursues / father figure" },
+  { from: "emberus", to: "carl", type: "antagonizes", label: "threatens crawlers" },
+  { from: "maggie", to: "algos", type: "quest", label: "attempts to summon" },
+  { from: "maggie", to: "chris", type: "puppet", label: "infiltrator possession" },
+  { from: "carl", to: "denise", type: "killed", label: "garbage disposal kill" },
+  { from: "carl", to: "maggie", type: "killed", label: "kills with Mordecai's potion" },
+  { from: "katia", to: "maggie", type: "allied", label: "petrifies possessed Chris" },
+  { from: "samantha", to: "emberus", type: "connected", label: "involved in Geyrun's death" },
 ];
 
 function getNodeById(id) { return NODES.find(n => n.id === id); }
@@ -371,11 +457,11 @@ export default function DCCDag() {
           <span style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.06em", textShadow: "0 0 28px rgba(245,158,11,0.5)" }}>
             ⚔ DUNGEON CRAWLER CARL
           </span>
-          <span style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–3 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
+          <span style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–4 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 3 }}>
-            {["ALL","1","2","3"].map(b => (
+            {["ALL","1","2","3","4"].map(b => (
               <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
                 style={{
                   background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
