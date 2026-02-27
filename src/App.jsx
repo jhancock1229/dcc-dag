@@ -12,44 +12,88 @@ function manualPositions(nodes) {
 function hierarchicalPositions(nodes) {
   const BOOKS = [1, 2, 3, 4, 5, 6];
   const FACTIONS = ["PARTY","MEADOWLARK","CRAWLERS","ANTAGONISTS","NPCS","SYSTEM","MEDIA","BACKSTORY"];
-  const COL_W = 300, ROW_H = 88, PAD_X = 160, PAD_Y = 100;
+  // Each book column is wide enough for 2 sub-lanes
+  const COL_W = 420;   // gap between book centres
+  const LANE_W = 110;  // x offset between the two sub-lanes within a faction group
+  const NODE_H = 72;   // vertical gap between nodes in the same sub-lane
+  const FACTION_GAP = 56; // extra vertical gap between faction groups
+  const PAD_X = 200, PAD_Y = 120;
   const m = {};
   BOOKS.forEach(book => {
     const inBook = nodes.filter(n => n.book === book);
     const byFaction = {};
     inBook.forEach(n => { (byFaction[n.faction] = byFaction[n.faction] || []).push(n); });
-    let rowIdx = 0;
+    let curY = PAD_Y;
+    const colCX = PAD_X + (book - 1) * COL_W;
     FACTIONS.forEach(f => {
       const group = byFaction[f] || [];
+      if (group.length === 0) return;
+      // Split into two sub-lanes when group is large enough
+      const useTwoLanes = group.length > 2;
       group.forEach((n, i) => {
-        m[n.id] = { x: PAD_X + (book - 1) * COL_W, y: PAD_Y + rowIdx * ROW_H + i * (ROW_H * 0.52) };
+        let x, y;
+        if (useTwoLanes) {
+          const col = i % 2;          // 0 = left lane, 1 = right lane
+          const row = Math.floor(i / 2);
+          x = colCX + (col === 0 ? -LANE_W / 2 : LANE_W / 2);
+          y = curY + row * NODE_H;
+        } else {
+          // Single lane centred in column
+          x = colCX;
+          y = curY + i * NODE_H;
+        }
+        m[n.id] = { x, y };
       });
-      if (group.length > 0) rowIdx += group.length * 0.62 + 0.6;
+      // Advance Y by the rows used in this faction group
+      const rows = useTwoLanes ? Math.ceil(group.length / 2) : group.length;
+      curY += rows * NODE_H + FACTION_GAP;
     });
   });
   return m;
 }
 
-function forceDirectedPositions(nodes, edges, iters = 300) {
+function forceDirectedPositions(nodes, edges, iters = 320) {
   if (nodes.length === 0) return {};
-  const W = 2200, H = 1500;
-  const K = Math.sqrt((W * H) / nodes.length);
-  const REPULSION = K * K * 2.6;
-  const SPRING = 0.011;
-  const DAMPING = 0.82;
+  const W = 2400, H = 1600;
+  const K = Math.sqrt((W * H) / nodes.length) * 0.9;
+  const REPULSION = K * K * 2.2;
+  const SPRING = 0.009;
+  const DAMPING = 0.80;
   const CX = W / 2, CY = H / 2;
+
+  // Compute faction centroids from manual positions — this is the "gravity home"
+  const factionCentroid = {};
+  const factionCount = {};
+  nodes.forEach(n => {
+    if (!factionCentroid[n.faction]) { factionCentroid[n.faction] = { x: 0, y: 0 }; factionCount[n.faction] = 0; }
+    factionCentroid[n.faction].x += n.x;
+    factionCentroid[n.faction].y += n.y;
+    factionCount[n.faction]++;
+  });
+  Object.keys(factionCentroid).forEach(f => {
+    factionCentroid[f].x /= factionCount[f];
+    factionCentroid[f].y /= factionCount[f];
+  });
+
+  // Seed positions near faction centroid with some jitter
   const pos = {}, vel = {};
-  nodes.forEach((n, i) => {
-    const angle = (i / nodes.length) * Math.PI * 2;
-    const r = Math.min(W, H) * 0.28;
-    pos[n.id] = { x: CX + Math.cos(angle) * r + (Math.random() - 0.5) * 50, y: CY + Math.sin(angle) * r + (Math.random() - 0.5) * 50 };
+  nodes.forEach(n => {
+    const cx = factionCentroid[n.faction]?.x ?? CX;
+    const cy = factionCentroid[n.faction]?.y ?? CY;
+    pos[n.id] = { x: cx + (Math.random() - 0.5) * 200, y: cy + (Math.random() - 0.5) * 200 };
     vel[n.id] = { x: 0, y: 0 };
   });
+
   const ids = nodes.map(n => n.id);
+  const nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
+
   for (let iter = 0; iter < iters; iter++) {
-    const cooling = 1 - (iter / iters) * 0.82;
+    const cooling = 1 - (iter / iters) * 0.88;
     const force = {};
     ids.forEach(id => { force[id] = { x: 0, y: 0 }; });
+
+    // Node-node repulsion
     for (let a = 0; a < ids.length; a++) {
       for (let b = a + 1; b < ids.length; b++) {
         const ia = ids[a], ib = ids[b];
@@ -61,6 +105,8 @@ function forceDirectedPositions(nodes, edges, iters = 300) {
         force[ib].x -= nx; force[ib].y -= ny;
       }
     }
+
+    // Edge springs
     edges.forEach(e => {
       if (!pos[e.from] || !pos[e.to]) return;
       const dx = pos[e.to].x - pos[e.from].x, dy = pos[e.to].y - pos[e.from].y;
@@ -70,9 +116,20 @@ function forceDirectedPositions(nodes, edges, iters = 300) {
       force[e.from].x += nx; force[e.from].y += ny;
       force[e.to].x  -= nx; force[e.to].y  -= ny;
     });
+
+    // Faction-centroid gravity — pull each node toward its faction's home
+    const FACTION_GRAVITY = 0.022 * (1 - cooling * 0.5); // weakens as sim cools
     ids.forEach(id => {
-      force[id].x += (CX - pos[id].x) * 0.003;
-      force[id].y += (CY - pos[id].y) * 0.003;
+      const n = nodeMap[id];
+      const fc = factionCentroid[n.faction];
+      if (fc) {
+        force[id].x += (fc.x - pos[id].x) * FACTION_GRAVITY;
+        force[id].y += (fc.y - pos[id].y) * FACTION_GRAVITY;
+      }
+    });
+
+    // Integrate
+    ids.forEach(id => {
       vel[id].x = (vel[id].x + force[id].x) * DAMPING;
       vel[id].y = (vel[id].y + force[id].y) * DAMPING;
       const speed = Math.sqrt(vel[id].x ** 2 + vel[id].y ** 2);
@@ -272,11 +329,11 @@ export default function DCCDag() {
   const switchLayout = useCallback((id) => {
     setLayout(id);
     setPan({ x: 0, y: 20 });
-    setZoom(id === "hierarchical" ? 0.48 : 0.72);
+    setZoom(id === "hierarchical" ? 0.38 : 0.72);
     setSelected(null);
   }, []);
 
-  const DEFAULT_ZOOM = { manual: 0.72, hierarchical: 0.48, force: 0.58 };
+  const DEFAULT_ZOOM = { manual: 0.72, hierarchical: 0.38, force: 0.58 };
 
   return (
     <div style={{
@@ -371,14 +428,14 @@ export default function DCCDag() {
             <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
               {[1,2,3,4,5,6].map(b => (
                 <g key={b}>
-                  <rect x={160 + (b-1)*300 - 110} y={20} width={220} height={62} rx={8}
+                  <rect x={200 + (b-1)*420 - 130} y={20} width={260} height={62} rx={8}
                     fill={`rgba(245,158,11,0.04)`} stroke="rgba(245,158,11,0.1)" strokeWidth={1} />
-                  <text x={160 + (b-1)*300} y={44} textAnchor="middle"
+                  <text x={200 + (b-1)*420} y={44} textAnchor="middle"
                     fontSize={13} fontWeight="700" fill="#f59e0b" opacity={0.7}
                     style={{ fontFamily: "Georgia,serif", letterSpacing: "0.08em" }}>
                     BOOK {b}
                   </text>
-                  <text x={160 + (b-1)*300} y={62} textAnchor="middle"
+                  <text x={200 + (b-1)*420} y={62} textAnchor="middle"
                     fontSize={9} fill="#57534e" style={{ fontFamily: "monospace" }}>
                     {NODES.filter(n => n.book === b).length} characters
                   </text>
