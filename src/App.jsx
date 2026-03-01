@@ -272,30 +272,30 @@ const LAYOUTS = [
 // ─── Styles ────────────────────────────────────────────────────────────────
 
 const FACTION_STYLE = {
-  PARTY:       { color: "#f59e0b", dim: "#78350f", label: "Carl's Party" },
-  MEADOWLARK:  { color: "#34d399", dim: "#064e3b", label: "Meadow Lark" },
-  CRAWLERS:    { color: "#e879f9", dim: "#4a044e", label: "Other Crawlers" },
-  ANTAGONISTS: { color: "#f87171", dim: "#450a0a", label: "Antagonists" },
-  SYSTEM:      { color: "#a78bfa", dim: "#3b0764", label: "System / Borant" },
-  MEDIA:       { color: "#60a5fa", dim: "#1e3a5f", label: "Galactic Media" },
-  NPCS:        { color: "#fb923c", dim: "#431407", label: "Dungeon NPCs/Elites" },
-  BACKSTORY:   { color: "#94a3b8", dim: "#1e293b", label: "Pre-Dungeon" },
+  PARTY:       { color: "#b45309", dim: "#fef3c7", label: "Carl's Party" },
+  MEADOWLARK:  { color: "#059669", dim: "#d1fae5", label: "Meadow Lark" },
+  CRAWLERS:    { color: "#9333ea", dim: "#f3e8ff", label: "Other Crawlers" },
+  ANTAGONISTS: { color: "#dc2626", dim: "#fee2e2", label: "Antagonists" },
+  SYSTEM:      { color: "#6d28d9", dim: "#ede9fe", label: "System / Borant" },
+  MEDIA:       { color: "#2563eb", dim: "#dbeafe", label: "Galactic Media" },
+  NPCS:        { color: "#c2410c", dim: "#ffedd5", label: "Dungeon NPCs/Elites" },
+  BACKSTORY:   { color: "#475569", dim: "#f1f5f9", label: "Pre-Dungeon" },
 };
 
 const EDGE_STYLE = {
-  party:       { color: "#f59e0b" }, trains:      { color: "#fde68a" },
-  allied:      { color: "#34d399" }, protected:   { color: "#34d399" },
-  killed:      { color: "#f87171" }, antagonizes: { color: "#f87171" },
-  hunts:       { color: "#f87171" }, controls:    { color: "#a78bfa" },
-  employs:     { color: "#a78bfa" }, manages:     { color: "#60a5fa" },
-  hosts:       { color: "#60a5fa" }, rescued:     { color: "#34d399" },
-  companion:   { color: "#f59e0b" }, causes:      { color: "#fb923c" },
-  exgf:        { color: "#94a3b8" }, leads:       { color: "#34d399" },
-  puppet:      { color: "#f87171" }, connected:   { color: "#78716c" },
-  quest:       { color: "#fb923c" }, joined:      { color: "#34d399" },
-  brokers:     { color: "#60a5fa" }, coerces:     { color: "#f87171" },
-  loved:       { color: "#fb923c" }, replaces:    { color: "#a78bfa" },
-  tricks:      { color: "#f87171" }, mentors:     { color: "#fde68a" },
+  party:       { color: "#b45309" }, trains:      { color: "#92400e" },
+  allied:      { color: "#059669" }, protected:   { color: "#059669" },
+  killed:      { color: "#dc2626" }, antagonizes: { color: "#dc2626" },
+  hunts:       { color: "#dc2626" }, controls:    { color: "#7c3aed" },
+  employs:     { color: "#7c3aed" }, manages:     { color: "#2563eb" },
+  hosts:       { color: "#2563eb" }, rescued:     { color: "#059669" },
+  companion:   { color: "#b45309" }, causes:      { color: "#c2410c" },
+  exgf:        { color: "#64748b" }, leads:       { color: "#059669" },
+  puppet:      { color: "#dc2626" }, connected:   { color: "#94a3b8" },
+  quest:       { color: "#c2410c" }, joined:      { color: "#059669" },
+  brokers:     { color: "#2563eb" }, coerces:     { color: "#dc2626" },
+  loved:       { color: "#c2410c" }, replaces:    { color: "#7c3aed" },
+  tricks:      { color: "#dc2626" }, mentors:     { color: "#92400e" },
 };
 
 const ROLE_EMOJI = {
@@ -511,30 +511,30 @@ export default function DCCDag() {
   return (
     <div style={{
       height: "100vh", width: "100%",
-      background: "#06060c",
+      background: "#faf7f2",
       backgroundImage: `
-        radial-gradient(ellipse 60% 40% at 20% 15%, rgba(120,53,15,0.14) 0%, transparent 55%),
-        radial-gradient(ellipse 40% 55% at 80% 80%, rgba(59,7,100,0.12) 0%, transparent 55%),
-        radial-gradient(ellipse 30% 30% at 60% 10%, rgba(6,78,59,0.08) 0%, transparent 40%),
-        repeating-linear-gradient(0deg,transparent,transparent 70px,rgba(255,255,255,0.011) 70px,rgba(255,255,255,0.011) 71px),
-        repeating-linear-gradient(90deg,transparent,transparent 70px,rgba(255,255,255,0.011) 70px,rgba(255,255,255,0.011) 71px)
+        radial-gradient(ellipse 60% 40% at 20% 15%, rgba(180,83,9,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 55% at 80% 80%, rgba(109,40,217,0.05) 0%, transparent 55%),
+        radial-gradient(ellipse 30% 30% at 60% 10%, rgba(5,150,105,0.04) 0%, transparent 40%),
+        repeating-linear-gradient(0deg,transparent,transparent 70px,rgba(0,0,0,0.018) 70px,rgba(0,0,0,0.018) 71px),
+        repeating-linear-gradient(90deg,transparent,transparent 70px,rgba(0,0,0,0.018) 70px,rgba(0,0,0,0.018) 71px)
       `,
       fontFamily: "'Georgia','Times New Roman',serif",
-      color: "#e2d9c8", display: "flex", flexDirection: "column",
+      color: "#1c1917", display: "flex", flexDirection: "column",
       userSelect: "none", overflow: "hidden",
     }}>
       {/* Top bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "8px 14px", borderBottom: "1px solid rgba(245,158,11,0.18)",
-        background: "rgba(0,0,0,0.7)", backdropFilter: "blur(14px)",
+        padding: "8px 14px", background: "rgba(250,247,242,0.92)", backdropFilter: "blur(14px)",
+        borderBottom: "1px solid rgba(180,83,9,0.18)",
         zIndex: 50, flexShrink: 0, gap: 8, minHeight: 44, overflow: "hidden",
       }}>
         <div style={{ flexShrink: 1, overflow: "hidden", whiteSpace: "nowrap" }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.05em", textShadow: "0 0 28px rgba(245,158,11,0.5)" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#92400e", letterSpacing: "0.05em", textShadow: "none" }}>
             ⚔ DUNGEON CRAWLER CARL
           </span>
-          <span className="dag-subtitle" style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
+          <span className="dag-subtitle" style={{ marginLeft: 10, fontSize: 11, color: "#a8a29e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {page === "dag" && <>
@@ -542,9 +542,9 @@ export default function DCCDag() {
               {["ALL","1","2","3","4","5","6","7"].map(b => (
                 <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
                   style={{
-                    background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
-                    border: filterBook === b ? "1px solid rgba(245,158,11,0.6)" : "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 6, color: filterBook === b ? "#f59e0b" : "#78716c",
+                    background: filterBook === b ? "rgba(180,83,9,0.12)" : "rgba(0,0,0,0.04)",
+                    border: filterBook === b ? "1px solid rgba(180,83,9,0.5)" : "1px solid rgba(0,0,0,0.1)",
+                    borderRadius: 6, color: filterBook === b ? "#92400e" : "#78716c",
                     padding: "4px 8px", fontSize: 11, cursor: "pointer", minWidth: 28, textAlign: "center",
                   }}>
                   {b === "ALL" ? "All" : b}
@@ -552,25 +552,25 @@ export default function DCCDag() {
               ))}
             </div>
             <select value={filterFaction} onChange={e => { setFilterFaction(e.target.value); setSelected(null); }}
-              style={{ background: "#111", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#e2d9c8", padding: "4px 9px", fontSize: 12, cursor: "pointer" }}>
+              style={{ background: "#fff", border: "1px solid rgba(180,83,9,0.25)", borderRadius: 6, color: "#1c1917", padding: "4px 9px", fontSize: 12, cursor: "pointer" }}>
               <option value="ALL">All Groups</option>
               {Object.entries(FACTION_STYLE).map(([k, v]) => (
                 <option key={k} value={k}>{v.label}</option>
               ))}
             </select>
             <button onClick={() => centerGraph(DEFAULT_ZOOM[layout])}
-              style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#f59e0b", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
+              style={{ background: "rgba(180,83,9,0.08)", border: "1px solid rgba(180,83,9,0.25)", borderRadius: 6, color: "#92400e", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
               Reset View
             </button>
             {selected && (
               <button onClick={() => setSelected(null)}
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: "#a8a29e", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
+                style={{ background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 6, color: "#78716c", padding: "4px 11px", fontSize: 12, cursor: "pointer" }}>
                 ✕ Clear
               </button>
             )}
           </>}
           <button onClick={() => setPage(p => p === "cookbook" ? "dag" : "cookbook")}
-            style={{ background: page === "cookbook" ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.04)", border: page === "cookbook" ? "1px solid rgba(245,158,11,0.45)" : "1px solid rgba(255,255,255,0.1)", borderRadius: 6, color: page === "cookbook" ? "#f59e0b" : "#78716c", padding: "4px 12px", fontSize: 12, cursor: "pointer", letterSpacing: "0.04em" }}>
+            style={{ background: page === "cookbook" ? "rgba(180,83,9,0.12)" : "rgba(0,0,0,0.04)", border: page === "cookbook" ? "1px solid rgba(180,83,9,0.45)" : "1px solid rgba(0,0,0,0.1)", borderRadius: 6, color: page === "cookbook" ? "#92400e" : "#78716c", padding: "4px 12px", fontSize: 12, cursor: "pointer", letterSpacing: "0.04em" }}>
             📖 Cookbook Authors
           </button>
         </div>
@@ -582,12 +582,12 @@ export default function DCCDag() {
         {isComputing && (
           <div style={{
             position: "absolute", inset: 0, zIndex: 100,
-            background: "rgba(6,6,12,0.75)", backdropFilter: "blur(4px)",
+            background: "rgba(250,247,242,0.85)", backdropFilter: "blur(4px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             flexDirection: "column", gap: 12,
           }}>
             <div style={{ fontSize: 28, animation: "spin 1.2s linear infinite" }}>⬡</div>
-            <div style={{ fontSize: 13, color: "#f59e0b", letterSpacing: "0.12em" }}>COMPUTING LAYOUT…</div>
+            <div style={{ fontSize: 13, color: "#92400e", letterSpacing: "0.12em" }}>COMPUTING LAYOUT…</div>
           </div>
         )}
 
@@ -609,14 +609,14 @@ export default function DCCDag() {
               {[1,2,3,4,5,6,7].map(b => (
                 <g key={b}>
                   <rect x={200 + (b-1)*420 - 130} y={20} width={260} height={62} rx={8}
-                    fill={`rgba(245,158,11,0.04)`} stroke="rgba(245,158,11,0.1)" strokeWidth={1} />
+                    fill={`rgba(180,83,9,0.04)`} stroke="rgba(180,83,9,0.12)" strokeWidth={1} />
                   <text x={200 + (b-1)*420} y={44} textAnchor="middle"
-                    fontSize={13} fontWeight="700" fill="#f59e0b" opacity={0.7}
+                    fontSize={13} fontWeight="700" fill="#92400e" opacity={0.8}
                     style={{ fontFamily: "Georgia,serif", letterSpacing: "0.08em" }}>
                     BOOK {b}
                   </text>
                   <text x={200 + (b-1)*420} y={62} textAnchor="middle"
-                    fontSize={9} fill="#57534e" style={{ fontFamily: "monospace" }}>
+                    fontSize={9} fill="#a8a29e" style={{ fontFamily: "monospace" }}>
                     {NODES.filter(n => n.book === b).length} characters
                   </text>
                 </g>
@@ -638,7 +638,7 @@ export default function DCCDag() {
                   <path d={`M${x1},${y1} Q${mx},${my} ${x2},${y2}`}
                     fill="none" stroke={es.color}
                     strokeWidth={active ? 2.2 : 1}
-                    strokeOpacity={dimmed ? 0.05 : active ? 0.9 : 0.18}
+                    strokeOpacity={dimmed ? 0.08 : active ? 0.95 : 0.35}
                     markerEnd={`url(#arr-${e.type})`}
                     style={{ transition: "stroke-opacity 0.15s" }}
                   />
@@ -661,7 +661,7 @@ export default function DCCDag() {
               const dimmed = connectedIds && !connectedIds.has(node.id);
               const baseR = layout === "prominence" ? Math.round(16 + getProminence(node.id) * 4.0) : 30;
               const R = isSel ? baseR + 8 : isHov ? baseR + 5 : baseR;
-              const bookColor = node.book === 3 ? "#4ade80" : node.book === 2 ? "#a78bfa" : null;
+              const bookColor = node.book === 3 ? "#059669" : node.book === 2 ? "#7c3aed" : null;
               return (
                 <g key={node.id} transform={`translate(${pos.x},${pos.y})`}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
@@ -675,16 +675,14 @@ export default function DCCDag() {
                   )}
                   {(isSel || isHov) && (
                     <circle r={R + 9} fill="none" stroke={fs.color}
-                      strokeWidth={isSel ? 2 : 1} opacity={isSel ? 0.35 : 0.18}
-                      filter="url(#glow)" />
+                      strokeWidth={isSel ? 2 : 1} opacity={isSel ? 0.4 : 0.2} />
                   )}
                   <circle r={R}
-                    fill={isSel ? fs.dim : `${fs.dim}88`}
+                    fill={isSel ? fs.dim : "#ffffff"}
                     stroke={fs.color}
                     strokeWidth={isSel ? 2.5 : isHov ? 2 : 1.5}
-                    opacity={dimmed ? 0.12 : 1}
-                    filter={isSel ? "url(#glow2)" : undefined}
-                    style={{ transition: "all 0.14s ease" }}
+                    opacity={dimmed ? 0.2 : 1}
+                    style={{ transition: "all 0.14s ease", filter: isSel ? `drop-shadow(0 0 6px ${fs.color}66)` : "drop-shadow(0 1px 3px rgba(0,0,0,0.12))" }}
                   />
                   <text y={-2} textAnchor="middle" fontSize={isSel ? 17 : 15}
                     opacity={dimmed ? 0.12 : 1} style={{ pointerEvents: "none" }}>
@@ -712,7 +710,7 @@ export default function DCCDag() {
         <div style={{
           width: selectedNode ? 315 : 0, minWidth: selectedNode ? 315 : 0,
           overflow: "hidden", transition: "all 0.27s cubic-bezier(.4,0,.2,1)",
-          borderLeft: "1px solid rgba(245,158,11,0.12)",
+          borderLeft: "1px solid rgba(180,83,9,0.12)",
           background: "rgba(4,4,10,0.95)", backdropFilter: "blur(20px)",
           flexShrink: 0,
         }}>
@@ -722,13 +720,13 @@ export default function DCCDag() {
         {/* Legend + Layout switcher */}
         <div style={{
           position: "absolute", bottom: 14, left: 14,
-          background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "11px 13px",
+          background: "rgba(250,247,242,0.96)", backdropFilter: "blur(10px)",
+          border: "1px solid rgba(0,0,0,0.1)", boxShadow: "0 2px 12px rgba(0,0,0,0.1)", borderRadius: 10, padding: "11px 13px",
           minWidth: 168, maxHeight: "calc(100vh - 80px)", overflowY: "auto",
         }}>
           {/* Layout toggle */}
-          <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Layout</div>
+          <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+            <div style={{ fontSize: 9, color: "#a8a29e", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Layout</div>
             <div style={{ display: "flex", gap: 4 }}>
               {LAYOUTS.map(l => (
                 <button key={l.id}
@@ -736,9 +734,9 @@ export default function DCCDag() {
                   title={(l.id === "force" || l.id === "prominence") && layout === l.id ? "Click to reshuffle" : l.desc}
                   style={{
                     flex: 1, padding: "5px 4px", borderRadius: 6, cursor: "pointer",
-                    background: layout === l.id ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.04)",
-                    border: layout === l.id ? "1px solid rgba(245,158,11,0.55)" : "1px solid rgba(255,255,255,0.08)",
-                    color: layout === l.id ? "#f59e0b" : "#57534e",
+                    background: layout === l.id ? "rgba(180,83,9,0.12)" : "rgba(0,0,0,0.04)",
+                    border: layout === l.id ? "1px solid rgba(180,83,9,0.45)" : "1px solid rgba(0,0,0,0.1)",
+                    color: layout === l.id ? "#92400e" : "#6b7280",
                     fontSize: 9, display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
                     transition: "all 0.15s",
                   }}>
@@ -748,26 +746,26 @@ export default function DCCDag() {
               ))}
             </div>
             {(layout === "force" || layout === "prominence") && (
-              <div style={{ fontSize: 9, color: "#44403c", textAlign: "center", marginTop: 5, fontFamily: "monospace" }}>
+              <div style={{ fontSize: 9, color: "#a8a29e", textAlign: "center", marginTop: 5, fontFamily: "monospace" }}>
                 click again to reshuffle
               </div>
             )}
           </div>
 
           {/* Faction legend */}
-          <div style={{ fontSize: 9, color: "#3c3834", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7 }}>Groups</div>
+          <div style={{ fontSize: 9, color: "#a8a29e", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7 }}>Groups</div>
           {Object.entries(FACTION_STYLE).map(([k, v]) => (
             <div key={k} onClick={() => setFilterFaction(filterFaction === k ? "ALL" : k)}
               style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, cursor: "pointer", opacity: filterFaction !== "ALL" && filterFaction !== k ? 0.3 : 1 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: v.color }} />
-              <span style={{ fontSize: 10, color: "#a8a29e" }}>{v.label}</span>
+              <span style={{ fontSize: 10, color: "#374151" }}>{v.label}</span>
             </div>
           ))}
-          <div style={{ marginTop: 8, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6 }}>
-            {[["#a78bfa","Book 2"],["#4ade80","Book 3"]].map(([c,l]) => (
+          <div style={{ marginTop: 8, borderTop: "1px solid rgba(0,0,0,0.07)", paddingTop: 6 }}>
+            {[["#7c3aed","Book 2"],["#059669","Book 3"]].map(([c,l]) => (
               <div key={l} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
                 <div style={{ width: 18, height: 9, borderRadius: "50%", border: `1px dashed ${c}`, opacity: 0.6 }} />
-                <span style={{ fontSize: 9.5, color: "#78716c" }}>{l} character</span>
+                <span style={{ fontSize: 9.5, color: "#6b7280" }}>{l} character</span>
               </div>
             ))}
           </div>
@@ -775,9 +773,9 @@ export default function DCCDag() {
 
         <div style={{
           position: "absolute", bottom: 14, right: selectedNode ? 329 : 14,
-          background: "rgba(0,0,0,0.55)", borderRadius: 6,
-          padding: "3px 9px", fontSize: 11, color: "#3c3834",
-          border: "1px solid rgba(255,255,255,0.04)",
+          background: "rgba(250,247,242,0.9)", borderRadius: 6,
+          padding: "3px 9px", fontSize: 11, color: "#a8a29e",
+          border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
         }}>
           {Math.round(zoom * 100)}%
         </div>
@@ -1028,14 +1026,14 @@ function CookbookPage() {
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 28px 80px" }}>
 
         {/* Page header */}
-        <div style={{ marginBottom: 26, paddingBottom: 20, borderBottom: "1px solid rgba(245,158,11,0.12)" }}>
-          <div style={{ fontSize: 11, color: "#57534e", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>
+        <div style={{ marginBottom: 26, paddingBottom: 20, borderBottom: "1px solid rgba(180,83,9,0.12)" }}>
+          <div style={{ fontSize: 11, color: "#a8a29e", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>
             Reference
           </div>
-          <h1 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.04em", textShadow: "0 0 28px rgba(245,158,11,0.35)" }}>
+          <h1 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 700, color: "#92400e", letterSpacing: "0.04em", textShadow: "none" }}>
             ⚡ The Dungeon Anarchist's Cookbook
           </h1>
-          <p style={{ margin: "0 0 18px", fontSize: 14, color: "#78716c", lineHeight: 1.75, maxWidth: 700 }}>
+          <p style={{ margin: "0 0 18px", fontSize: 14, color: "#6b7280", lineHeight: 1.75, maxWidth: 700 }}>
             Created by the System AI in the 15th season. Passed to crawlers meeting unknown criteria.
             Neither audience nor production can see its contents. Disappears on death or retirement.
             25 known editions. Most of its authors did not survive.
@@ -1043,15 +1041,15 @@ function CookbookPage() {
           {/* Stat row */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
-              { label: "Editions",        val: 25,           col: "#f59e0b" },
-              { label: "Named Authors",   val: 23,           col: "#e2d9c8" },
-              { label: "Confirmed Dead",  val: totals.dead,  col: "#f87171" },
-              { label: "Confirmed Alive", val: totals.alive, col: "#34d399" },
-              { label: "Active in B7",    val: totals.b7,    col: "#a78bfa" },
+              { label: "Editions",        val: 25,           col: "#b45309" },
+              { label: "Named Authors",   val: 23,           col: "#374151" },
+              { label: "Confirmed Dead",  val: totals.dead,  col: "#dc2626" },
+              { label: "Confirmed Alive", val: totals.alive, col: "#059669" },
+              { label: "Active in B7",    val: totals.b7,    col: "#7c3aed" },
             ].map(s => (
-              <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${s.col}22`, borderRadius: 8, padding: "9px 18px", minWidth: 90, textAlign: "center" }}>
+              <div key={s.label} style={{ background: "rgba(0,0,0,0.02)", border: `1px solid ${s.col}33`, borderRadius: 8, padding: "9px 18px", minWidth: 90, textAlign: "center" }}>
                 <div className="cb-stat-val" style={{ fontSize: 24, fontWeight: 700, color: s.col, lineHeight: 1 }}>{s.val}</div>
-                <div className="cb-stat-label" style={{ fontSize: 11, color: "#57534e", marginTop: 4, letterSpacing: "0.04em" }}>{s.label}</div>
+                <div className="cb-stat-label" style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, letterSpacing: "0.04em" }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -1064,22 +1062,22 @@ function CookbookPage() {
             placeholder="Search name, race, contributions…"
             style={{
               flex: 1, minWidth: 200,
-              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 7, color: "#e2d9c8", padding: "7px 13px", fontSize: 13,
+              background: "#ffffff", border: "1px solid rgba(0,0,0,0.12)",
+              borderRadius: 7, color: "#1c1917", padding: "7px 13px", fontSize: 13,
               outline: "none", fontFamily: "Georgia,'Times New Roman',serif",
             }}
           />
           {["ALL","alive","dead","unknown"].map(s => (
             <button key={s} onClick={() => setFilterStatus(s)} style={{
-              background: filterStatus === s ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.04)",
-              border: filterStatus === s ? "1px solid rgba(245,158,11,0.45)" : "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 6, color: filterStatus === s ? "#f59e0b" : "#78716c",
+              background: filterStatus === s ? "rgba(180,83,9,0.1)" : "rgba(0,0,0,0.04)",
+              border: filterStatus === s ? "1px solid rgba(180,83,9,0.4)" : "1px solid rgba(0,0,0,0.1)",
+              borderRadius: 6, color: filterStatus === s ? "#92400e" : "#78716c",
               padding: "6px 14px", fontSize: 13, cursor: "pointer",
             }}>
               {s === "ALL" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
-          <span style={{ fontSize: 12, color: "#44403c", marginLeft: 2 }}>{filtered.length}/{AUTHORS.length}</span>
+          <span style={{ fontSize: 12, color: "#9ca3af", marginLeft: 2 }}>{filtered.length}/{AUTHORS.length}</span>
         </div>
 
         {/* Author cards */}
@@ -1090,74 +1088,74 @@ function CookbookPage() {
             return (
               <div key={a.ed}
                 style={{
-                  background: isOpen ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.028)",
-                  border: `1px solid ${isOpen ? "rgba(245,158,11,0.22)" : "rgba(255,255,255,0.07)"}`,
+                  background: isOpen ? "#ffffff" : "rgba(0,0,0,0.02)",
+                  border: `1px solid ${isOpen ? "rgba(180,83,9,0.25)" : "rgba(0,0,0,0.07)"}`,
                   borderLeft: isOpen ? `3px solid ${sc.color}` : "3px solid transparent",
                   borderRadius: 8, overflow: "hidden", transition: "background 0.15s, border-color 0.15s",
                   cursor: "pointer",
                 }}
-                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "rgba(255,255,255,0.038)"; }}
-                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "rgba(255,255,255,0.028)"; }}
+                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "rgba(0,0,0,0.035)"; }}
+                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "rgba(0,0,0,0.02)"; }}
                 onClick={() => setExpanded(isOpen ? null : a.ed)}>
 
                 {/* Collapsed row */}
                 <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", alignItems: "center", gap: 16, padding: "13px 18px" }}>
                   {/* Edition badge */}
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "#f59e0b", lineHeight: 1 }}>{a.ed}</div>
-                    <div style={{ fontSize: 10, color: "#57534e", letterSpacing: "0.04em" }}>{a.suffix} ed.</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#b45309", lineHeight: 1 }}>{a.ed}</div>
+                    <div style={{ fontSize: 10, color: "#9ca3af", letterSpacing: "0.04em" }}>{a.suffix} ed.</div>
                   </div>
 
                   {/* Name + race */}
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span className="cb-name" style={{ fontSize: 15, fontWeight: 700, color: a.isUnknown ? "#57534e" : "#e2d9c8", fontStyle: a.isUnknown ? "italic" : "normal" }}>
+                      <span className="cb-name" style={{ fontSize: 15, fontWeight: 700, color: a.isUnknown ? "#9ca3af" : "#1c1917", fontStyle: a.isUnknown ? "italic" : "normal" }}>
                         {a.name}
                       </span>
                       {a.b7 && (
-                        <span style={{ fontSize: 10, background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)", borderRadius: 4, padding: "1px 7px", letterSpacing: "0.06em" }}>
+                        <span style={{ fontSize: 10, background: "rgba(109,40,217,0.08)", color: "#6d28d9", border: "1px solid rgba(109,40,217,0.3)", borderRadius: 4, padding: "1px 7px", letterSpacing: "0.06em" }}>
                           BOOK 7
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: "#57534e", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
                       {a.race !== "Unknown" && <span>{a.race}</span>}
                       {a.race !== "Unknown" && a.season && <span style={{ color: "#44403c" }}> · </span>}
-                      {a.season && <span style={{ fontStyle: "italic", color: "#44403c" }}>{a.season}</span>}
+                      {a.season && <span style={{ fontStyle: "italic", color: "#9ca3af" }}>{a.season}</span>}
                     </div>
                   </div>
 
                   {/* Status + chevron */}
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ textAlign: "right" }}>
-                      <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 5, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
+                      <span style={{ fontSize: 12, padding: "3px 10px", borderRadius: 5, background: sc.bg, color: sc.color, border: `1px solid ${sc.color}44` }}>
                         {sc.label}
                       </span>
                       {a.statusNote && (
-                        <div style={{ fontSize: 11, color: sc.color, opacity: 0.65, marginTop: 3, maxWidth: 220, textAlign: "right" }}>
+                        <div style={{ fontSize: 11, color: sc.color, opacity: 0.75, marginTop: 3, maxWidth: 220, textAlign: "right" }}>
                           {a.statusNote}
                         </div>
                       )}
                     </div>
-                    <span style={{ fontSize: 16, color: "#57534e", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</span>
+                    <span style={{ fontSize: 16, color: "#9ca3af", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</span>
                   </div>
                 </div>
 
                 {/* Expanded detail */}
                 {isOpen && (
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", padding: "18px 20px 20px" }}>
+                  <div style={{ borderTop: "1px solid rgba(0,0,0,0.07)", padding: "18px 20px 20px", background: "rgba(0,0,0,0.02)" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="cb-grid">
                       <div>
-                        <div style={{ fontSize: 10, color: "#44403c", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+                        <div style={{ fontSize: 10, color: "#9ca3af", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
                           Contributions &amp; Crawl Notes
                         </div>
-                        <p className="cb-body" style={{ margin: 0, fontSize: 13.5, color: "#c4bcb2", lineHeight: 1.8 }}>{a.contributions}</p>
+                        <p className="cb-body" style={{ margin: 0, fontSize: 13.5, color: "#374151", lineHeight: 1.8 }}>{a.contributions}</p>
                       </div>
                       <div>
-                        <div style={{ fontSize: 10, color: "#44403c", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+                        <div style={{ fontSize: 10, color: "#9ca3af", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
                           Whereabouts — End of Book 7
                         </div>
-                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.8, color: a.status === "dead" ? "#f87171" : a.status === "alive" ? "#34d399" : "#78716c", opacity: 0.9 }}>
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.8, color: a.status === "dead" ? "#dc2626" : a.status === "alive" ? "#059669" : "#6b7280", opacity: 0.9 }}>
                           {a.whereabouts}
                         </p>
                       </div>
@@ -1170,16 +1168,16 @@ function CookbookPage() {
         </div>
 
         {/* Footer note */}
-        <div style={{ marginTop: 32, padding: "14px 18px", background: "rgba(255,255,255,0.02)", borderRadius: 7, border: "1px solid rgba(255,255,255,0.05)", fontSize: 12, color: "#44403c", lineHeight: 1.85, fontStyle: "italic" }}>
+        <div style={{ marginTop: 32, padding: "14px 18px", background: "rgba(255,255,255,0.02)", borderRadius: 7, border: "1px solid rgba(255,255,255,0.05)", fontSize: 12, color: "#9ca3af", lineHeight: 1.85, fontStyle: "italic" }}>
           The 1st Edition has no confirmed author. The 23rd Edition exists (gap between Drakea's 22nd and Rickard's 24th) but its author is unnamed through Book 7.
-          Status reflects known facts as of <em style={{ color: "#57534e" }}>This Inevitable Ruin</em> (Book 7).
+          Status reflects known facts as of <em style={{ color: "#6b7280" }}>This Inevitable Ruin</em> (Book 7).
         </div>
       </div>
 
       <style>{`
         .cb-grid { grid-template-columns: 1fr 1fr; }
         @media (max-width: 700px) { .cb-grid { grid-template-columns: 1fr !important; } }
-        input::placeholder { color: #44403c; }
+        input::placeholder { color: #9ca3af; }
         .cb-page { font-size: clamp(13px, 1.4vw, 16px); }
         .cb-page h1 { font-size: clamp(18px, 2.2vw, 28px) !important; }
         .cb-page .cb-name { font-size: clamp(13px, 1.2vw, 16px) !important; }
@@ -1195,20 +1193,20 @@ function Sidebar({ node, onSelect }) {
   const fs = FACTION_STYLE[node.faction];
   const outgoing = EDGES.filter(e => e.from === node.id);
   const incoming = EDGES.filter(e => e.to === node.id);
-  const bookColor = node.book === 3 ? "#4ade80" : node.book === 2 ? "#a78bfa" : "#f59e0b";
+  const bookColor = node.book === 3 ? "#059669" : node.book === 2 ? "#7c3aed" : "#b45309";
   return (
     <div style={{ padding: 20, height: "100%", overflowY: "auto" }}>
       <div style={{ paddingBottom: 15, borderBottom: `1px solid ${fs.color}22`, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ fontSize: 26 }}>{ROLE_EMOJI[node.role] || "●"}</span>
-          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${bookColor}18`, color: bookColor, border: `1px solid ${bookColor}33`, fontFamily: "monospace" }}>Book {node.book}</span>
+          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${bookColor}12`, color: bookColor, border: `1px solid ${bookColor}44`, fontFamily: "monospace" }}>Book {node.book}</span>
         </div>
         <h2 style={{ margin: "0 0 7px", fontSize: 19, color: fs.color, lineHeight: 1.2 }}>{node.label}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 11 }}>
           <Tag color={fs.color}>{fs.label}</Tag>
           <Tag color="#57534e">{node.role}</Tag>
         </div>
-        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.72, color: "#c4bcb2" }}>{node.desc}</p>
+        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.72, color: "#374151" }}>{node.desc}</p>
       </div>
       {outgoing.length > 0 && <EdgeGroup title="→ Connects to" edges={outgoing} dirKey="to" onSelect={onSelect} />}
       {incoming.length > 0 && <EdgeGroup title="← Connected by" edges={incoming} dirKey="from" onSelect={onSelect} />}
@@ -1219,7 +1217,7 @@ function Sidebar({ node, onSelect }) {
 function EdgeGroup({ title, edges, dirKey, onSelect }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div style={{ fontSize: 9.5, color: "#3c3834", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7 }}>{title}</div>
+      <div style={{ fontSize: 9.5, color: "#a8a29e", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7 }}>{title}</div>
       {edges.map((e, i) => {
         const targetId = e[dirKey];
         const targetNode = getNodeById(targetId);
@@ -1228,17 +1226,17 @@ function EdgeGroup({ title, edges, dirKey, onSelect }) {
         const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
         return (
           <div key={i} onClick={() => onSelect(targetId)}
-            style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, marginBottom: 4, background: "rgba(255,255,255,0.025)", border: `1px solid ${tfs.color}18`, cursor: "pointer" }}
-            onMouseEnter={ev => ev.currentTarget.style.background = `${tfs.dim}44`}
-            onMouseLeave={ev => ev.currentTarget.style.background = "rgba(255,255,255,0.025)"}>
+            style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 9px", borderRadius: 7, marginBottom: 4, background: "rgba(0,0,0,0.025)", border: `1px solid ${tfs.color}33`, cursor: "pointer" }}
+            onMouseEnter={ev => ev.currentTarget.style.background = `${tfs.dim}`}
+            onMouseLeave={ev => ev.currentTarget.style.background = "rgba(0,0,0,0.025)"}>
             <span style={{ fontSize: 13 }}>{ROLE_EMOJI[targetNode.role]}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12.5, color: tfs.color, fontWeight: 600 }}>{targetNode.label}</div>
-              <div style={{ fontSize: 10, color: "#44403c" }}>
+              <div style={{ fontSize: 10, color: "#9ca3af" }}>
                 <span style={{ color: es.color }}>{e.label}</span>{" · "}{tfs.label}
               </div>
             </div>
-            <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 8, fontFamily: "monospace", background: targetNode.book === 3 ? "rgba(74,222,128,0.1)" : targetNode.book === 2 ? "rgba(167,139,250,0.1)" : "rgba(245,158,11,0.08)", color: targetNode.book === 3 ? "#4ade80" : targetNode.book === 2 ? "#a78bfa" : "#78716c" }}>B{targetNode.book}</span>
+            <span style={{ fontSize: 9, padding: "1px 5px", borderRadius: 8, fontFamily: "monospace", background: targetNode.book === 3 ? "rgba(5,150,105,0.1)" : targetNode.book === 2 ? "rgba(124,58,237,0.1)" : "rgba(180,83,9,0.08)", color: targetNode.book === 3 ? "#059669" : targetNode.book === 2 ? "#7c3aed" : "#92400e" }}>B{targetNode.book}</span>
           </div>
         );
       })}
@@ -1248,6 +1246,6 @@ function EdgeGroup({ title, edges, dirKey, onSelect }) {
 
 function Tag({ color, children }) {
   return (
-    <span style={{ fontSize: 9.5, padding: "2px 7px", borderRadius: 12, background: `${color}13`, color, border: `1px solid ${color}28` }}>{children}</span>
+    <span style={{ fontSize: 9.5, padding: "2px 7px", borderRadius: 12, background: `${color}18`, color, border: `1px solid ${color}44` }}>{children}</span>
   );
 }
