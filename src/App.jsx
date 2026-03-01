@@ -526,17 +526,17 @@ export default function DCCDag() {
       {/* Top bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "10px 18px", borderBottom: "1px solid rgba(245,158,11,0.18)",
+        padding: "8px 14px", borderBottom: "1px solid rgba(245,158,11,0.18)",
         background: "rgba(0,0,0,0.7)", backdropFilter: "blur(14px)",
-        zIndex: 50, flexShrink: 0, flexWrap: "wrap", gap: 8,
+        zIndex: 50, flexShrink: 0, gap: 8, minHeight: 44, overflow: "hidden",
       }}>
-        <div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.06em", textShadow: "0 0 28px rgba(245,158,11,0.5)" }}>
+        <div style={{ flexShrink: 1, overflow: "hidden", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.05em", textShadow: "0 0 28px rgba(245,158,11,0.5)" }}>
             ⚔ DUNGEON CRAWLER CARL
           </span>
           <span className="dag-subtitle" style={{ marginLeft: 10, fontSize: 11, color: "#57534e" }}>Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges</span>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {page === "dag" && <>
             <div style={{ display: "flex", gap: 3 }}>
               {["ALL","1","2","3","4","5","6","7"].map(b => (
@@ -545,9 +545,9 @@ export default function DCCDag() {
                     background: filterBook === b ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.04)",
                     border: filterBook === b ? "1px solid rgba(245,158,11,0.6)" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: 6, color: filterBook === b ? "#f59e0b" : "#78716c",
-                    padding: "4px 10px", fontSize: 12, cursor: "pointer",
+                    padding: "4px 8px", fontSize: 11, cursor: "pointer", minWidth: 28, textAlign: "center",
                   }}>
-                  {b === "ALL" ? "All Books" : `Book ${b}`}
+                  {b === "ALL" ? "All" : b}
                 </button>
               ))}
             </div>
@@ -724,7 +724,7 @@ export default function DCCDag() {
           position: "absolute", bottom: 14, left: 14,
           background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)",
           border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "11px 13px",
-          minWidth: 168,
+          minWidth: 168, maxHeight: "calc(100vh - 80px)", overflowY: "auto",
         }}>
           {/* Layout toggle */}
           <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
