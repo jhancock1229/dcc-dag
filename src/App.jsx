@@ -313,7 +313,7 @@ const ROLE_EMOJI = {
 
 function getNodeById(id) { return NODES.find(n => n.id === id); }
 
-function computeArrow(from, to, r = 25) {
+function computeArrow(from, to, r = 30) {
   const dx = to.x - from.x, dy = to.y - from.y;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   const ux = dx / len, uy = dy / len;
@@ -345,7 +345,7 @@ export default function DCCDag() {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   // Graph bounding box (manual layout) — computed once
-  const GRAPH_BOUNDS = { minX: 50, maxX: 1470, minY: -30, maxY: 760 };
+  const GRAPH_BOUNDS = { minX: 20, maxX: 1500, minY: -60, maxY: 800 };
   const [pan, setPan] = useState({ x: 0, y: 20 });
   const [zoom, setZoom] = useState(0.72);
   const [filterFaction, setFilterFaction] = useState("ALL");
@@ -659,7 +659,7 @@ export default function DCCDag() {
               const isSel = selected === node.id;
               const isHov = hovered === node.id;
               const dimmed = connectedIds && !connectedIds.has(node.id);
-              const baseR = layout === "prominence" ? Math.round(12 + getProminence(node.id) * 3.2) : 25;
+              const baseR = layout === "prominence" ? Math.round(16 + getProminence(node.id) * 4.0) : 30;
               const R = isSel ? baseR + 8 : isHov ? baseR + 5 : baseR;
               const bookColor = node.book === 3 ? "#4ade80" : node.book === 2 ? "#a78bfa" : null;
               return (
@@ -686,18 +686,18 @@ export default function DCCDag() {
                     filter={isSel ? "url(#glow2)" : undefined}
                     style={{ transition: "all 0.14s ease" }}
                   />
-                  <text y={-2} textAnchor="middle" fontSize={isSel ? 14 : 12}
+                  <text y={-2} textAnchor="middle" fontSize={isSel ? 17 : 15}
                     opacity={dimmed ? 0.12 : 1} style={{ pointerEvents: "none" }}>
                     {ROLE_EMOJI[node.role] || "●"}
                   </text>
-                  <text y={R + 14} textAnchor="middle"
-                    fontSize={isSel ? 11 : 9.5} fontWeight={isSel ? "700" : "400"}
+                  <text y={R + 16} textAnchor="middle"
+                    fontSize={isSel ? 13 : 11.5} fontWeight={isSel ? "700" : "500"}
                     fill={fs.color} opacity={dimmed ? 0.12 : 1}
                     style={{ pointerEvents: "none", fontFamily: "Georgia,serif" }}>
                     {node.label}
                   </text>
-                  <text y={R + 25} textAnchor="middle" fontSize="8"
-                    fill={bookColor || "#57534e"} opacity={dimmed ? 0.08 : bookColor ? 0.75 : 0.3}
+                  <text y={R + 29} textAnchor="middle" fontSize="9.5"
+                    fill={bookColor || "#57534e"} opacity={dimmed ? 0.08 : bookColor ? 0.8 : 0.35}
                     fontWeight={bookColor ? "700" : "400"}
                     style={{ pointerEvents: "none", fontFamily: "monospace" }}>
                     Bk {node.book}
