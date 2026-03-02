@@ -359,7 +359,7 @@ function computeArrow(from, to, r = 24) {
 export default function DCCDag() {
   const svgRef = useRef(null);
   const [page, setPage] = useState("dag"); // "dag" | "cookbook"
-  const [layout, setLayout] = useState("prominence");
+  const [layout, setLayout] = useState("arc");
   const [isComputing, setIsComputing] = useState(false);
 
   // Positions: manual uses data.js coords; others are computed
@@ -418,19 +418,16 @@ export default function DCCDag() {
     const doCenter = () => {
       const { width, height } = el.getBoundingClientRect();
       if (width === 0 || height === 0) return false;
-      const { minX, maxX, minY, maxY } = GRAPH_BOUNDS;
-      const graphW = maxX - minX;
-      const graphH = maxY - minY;
-      const fitZoom = Math.min(width / graphW, height / graphH) * 0.85;
-      const z = Math.min(0.82, Math.max(0.35, fitZoom));
-      const cx = (minX + maxX) / 2;
-      const cy = (minY + maxY) / 2;
-      setPan({ x: width / 2 - cx * z, y: height / 2 - cy * z });
+      // For arc layout (default): zoom in on Carl at center of the line
+      // Carl is at x = (111*52)/2 = 2886, y = 400
+      const CARL_X = (NODES.length - 1) * 52 / 2;
+      const CARL_Y = 400;
+      const z = 1.4; // zoomed in enough to read nearby names
+      setPan({ x: width / 2 - CARL_X * z, y: height / 2 - CARL_Y * z });
       setZoom(z);
       return true;
     };
     if (!doCenter()) {
-      // SVG not sized yet — observe until it is
       const ro = new ResizeObserver(() => {
         if (doCenter()) { ro.disconnect(); centeredRef.current = true; }
       });
