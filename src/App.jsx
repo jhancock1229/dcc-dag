@@ -328,16 +328,16 @@ function computeArrow(from, to, r = 30) {
 export default function DCCDag() {
   const svgRef = useRef(null);
   const [page, setPage] = useState("dag"); // "dag" | "cookbook"
-  const [layout, setLayout] = useState("manual");
+  const [layout, setLayout] = useState("prominence");
   const [isComputing, setIsComputing] = useState(false);
 
   // Positions: manual uses data.js coords; others are computed
-  const [positionsByLayout, setPositionsByLayout] = useState({
+  const [positionsByLayout, setPositionsByLayout] = useState(() => ({
     manual: (() => { const m = {}; NODES.forEach(n => { m[n.id] = { x: n.x, y: n.y }; }); return m; })(),
     hierarchical: null,
     force: null,
-    prominence: null,
-  });
+    prominence: prominencePositions(NODES, EDGES),
+  }));
 
   // Per-layout user drag overrides
   const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {}, prominence: {} });
@@ -640,8 +640,8 @@ export default function DCCDag() {
                 <g key={i}>
                   <path d={`M${x1},${y1} Q${mx},${my} ${x2},${y2}`}
                     fill="none" stroke={es.color}
-                    strokeWidth={active ? 2.2 : 1}
-                    strokeOpacity={dimmed ? 0.06 : active ? 0.95 : 0.4}
+                    strokeWidth={active ? 2.5 : 1.4}
+                    strokeOpacity={dimmed ? 0.05 : active ? 0.95 : 0.55}
                     markerEnd={`url(#arr-${e.type})`}
                     style={{ transition: "stroke-opacity 0.15s" }}
                   />
@@ -691,17 +691,17 @@ export default function DCCDag() {
                     fill="none" stroke={fs.color} strokeWidth="0.5" opacity={isSel ? 0.6 : 0.25}
                     strokeDasharray={isSel ? "none" : "2 3"}
                   />}
-                  <text y={-2} textAnchor="middle" fontSize={isSel ? 17 : 15}
+                  <text y={-2} textAnchor="middle" fontSize={isSel ? 18 : 16}
                     opacity={dimmed ? 0.12 : 1} style={{ pointerEvents: "none" }}>
                     {ROLE_EMOJI[node.role] || "●"}
                   </text>
                   <text y={R + 16} textAnchor="middle"
-                    fontSize={isSel ? 12.5 : 11} fontWeight={isSel ? "700" : "600"}
+                    fontSize={isSel ? 13.5 : 12} fontWeight={isSel ? "700" : "600"}
                     fill={fs.color} opacity={dimmed ? 0.12 : 1}
                     style={{ pointerEvents: "none", fontFamily: "'IM Fell English', 'Palatino Linotype', Georgia, serif" }}>
                     {node.label}
                   </text>
-                  <text y={R + 28} textAnchor="middle" fontSize="9"
+                  <text y={R + 29} textAnchor="middle" fontSize="10"
                     fill={bookColor || "#8a6a3a"} opacity={dimmed ? 0.08 : bookColor ? 0.85 : 0.45}
                     fontWeight={bookColor ? "700" : "400"}
                     style={{ pointerEvents: "none", fontFamily: "monospace", letterSpacing: "0.05em" }}>
