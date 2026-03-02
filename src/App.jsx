@@ -172,10 +172,10 @@ function getProminence(id) {
 }
 
 // Prominence layout: faction-seeded force with size-weighted repulsion
-function prominencePositions(nodes, edges, iters = 320) {
+function prominencePositions(nodes, edges, iters = 380) {
   if (nodes.length === 0) return {};
-  const W = 2400, H = 1600;
-  const DAMPING = 0.80;
+  const W = 3800, H = 2600;
+  const DAMPING = 0.78;
   const CX = W / 2, CY = H / 2;
 
   const factionCentroid = {};
@@ -214,10 +214,10 @@ function prominencePositions(nodes, edges, iters = 320) {
         const ia = ids[a], ib = ids[b];
         const ra = 14 + getProminence(ia) * 3.2;
         const rb = 14 + getProminence(ib) * 3.2;
-        const minDist = ra + rb + 18;
+        const minDist = ra + rb + 55;
         const dx = pos[ia].x - pos[ib].x, dy = pos[ia].y - pos[ib].y;
         const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-        const REPULSION = minDist * minDist * 2.0;
+        const REPULSION = minDist * minDist * 2.6;
         const mag = REPULSION / (dist * dist);
         const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
         force[ia].x += nx; force[ia].y += ny;
@@ -226,7 +226,7 @@ function prominencePositions(nodes, edges, iters = 320) {
     }
 
     // Edge springs
-    const K = 95;
+    const K = 130;
     edges.forEach(e => {
       if (!pos[e.from] || !pos[e.to]) return;
       const dx = pos[e.to].x - pos[e.from].x, dy = pos[e.to].y - pos[e.from].y;
@@ -313,7 +313,7 @@ const ROLE_EMOJI = {
 
 function getNodeById(id) { return NODES.find(n => n.id === id); }
 
-function computeArrow(from, to, r = 30) {
+function computeArrow(from, to, r = 24) {
   const dx = to.x - from.x, dy = to.y - from.y;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   const ux = dx / len, uy = dy / len;
@@ -345,7 +345,7 @@ export default function DCCDag() {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   // Graph bounding box (manual layout) — computed once
-  const GRAPH_BOUNDS = { minX: 20, maxX: 1500, minY: -60, maxY: 800 };
+  const GRAPH_BOUNDS = { minX: 0, maxX: 3800, minY: 0, maxY: 2600 };
   const [pan, setPan] = useState({ x: 0, y: 20 });
   const [zoom, setZoom] = useState(0.72);
   const [filterFaction, setFilterFaction] = useState("ALL");
@@ -511,13 +511,11 @@ export default function DCCDag() {
   return (
     <div style={{
       height: "100vh", width: "100%",
-      background: "#e8d5a3",
+      background: "#f0e4c4",
       backgroundImage: `
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
-        radial-gradient(ellipse 70% 50% at 10% 10%, rgba(101,47,0,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 60% at 90% 90%, rgba(60,20,0,0.14) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(232,213,163,0) 0%, rgba(210,180,120,0.3) 100%),
-        linear-gradient(160deg, #eddcb0 0%, #e0c98a 40%, #d4b870 70%, #dfc99a 100%)
+        radial-gradient(ellipse 80% 60% at 15% 10%, rgba(101,47,0,0.09) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 70% at 88% 88%, rgba(60,20,0,0.07) 0%, transparent 55%),
+        linear-gradient(160deg, #f5ead0 0%, #ecddb8 50%, #e8d5a8 100%)
       `,
       fontFamily: "'IM Fell English', 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
       color: "#1a0d00", display: "flex", flexDirection: "column",
@@ -640,8 +638,8 @@ export default function DCCDag() {
                 <g key={i}>
                   <path d={`M${x1},${y1} Q${mx},${my} ${x2},${y2}`}
                     fill="none" stroke={es.color}
-                    strokeWidth={active ? 2.5 : 1.4}
-                    strokeOpacity={dimmed ? 0.05 : active ? 0.95 : 0.55}
+                    strokeWidth={active ? 2.2 : 0.9}
+                    strokeOpacity={dimmed ? 0.04 : active ? 0.9 : 0.22}
                     markerEnd={`url(#arr-${e.type})`}
                     style={{ transition: "stroke-opacity 0.15s" }}
                   />
@@ -662,7 +660,7 @@ export default function DCCDag() {
               const isSel = selected === node.id;
               const isHov = hovered === node.id;
               const dimmed = connectedIds && !connectedIds.has(node.id);
-              const baseR = layout === "prominence" ? Math.round(16 + getProminence(node.id) * 4.0) : 30;
+              const baseR = layout === "prominence" ? Math.round(12 + getProminence(node.id) * 3.0) : 24;
               const R = isSel ? baseR + 8 : isHov ? baseR + 5 : baseR;
               const bookColor = node.book === 3 ? "#2d6a2d" : node.book === 2 ? "#5c2d8e" : null;
               return (
@@ -672,41 +670,32 @@ export default function DCCDag() {
                   onMouseEnter={() => setHovered(node.id)}
                   onMouseLeave={() => setHovered(null)}
                   style={{ cursor: "pointer" }}>
-                  {bookColor && !dimmed && (
-                    <circle r={R + 5} fill="none" stroke={bookColor}
-                      strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                  )}
+
                   {(isSel || isHov) && (
                     <circle r={R + 9} fill="none" stroke={fs.color}
-                      strokeWidth={isSel ? 2.5 : 1.5} opacity={isSel ? 0.5 : 0.25} />
+                      strokeWidth={isSel ? 2 : 1} opacity={isSel ? 0.45 : 0.18} />
                   )}
                   <circle r={R}
-                    fill={isSel ? fs.dim : "#f5e6c8"}
+                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : "#f8efd4"}
                     stroke={fs.color}
-                    strokeWidth={isSel ? 3 : isHov ? 2.5 : 2}
+                    strokeWidth={isSel ? 2.5 : isHov ? 2 : 1.5}
                     opacity={dimmed ? 0.2 : 1}
-                    style={{ transition: "all 0.14s ease", filter: isSel ? `drop-shadow(0 0 8px ${fs.color}88)` : "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+                    style={{ transition: "all 0.14s ease", filter: isSel ? `drop-shadow(0 0 6px ${fs.color}66)` : "drop-shadow(0 1px 2px rgba(0,0,0,0.14))" }}
                   />
-                  {!dimmed && <circle r={R - 4}
-                    fill="none" stroke={fs.color} strokeWidth="0.5" opacity={isSel ? 0.6 : 0.25}
-                    strokeDasharray={isSel ? "none" : "2 3"}
-                  />}
-                  <text y={-2} textAnchor="middle" fontSize={isSel ? 18 : 16}
-                    opacity={dimmed ? 0.12 : 1} style={{ pointerEvents: "none" }}>
+
+                  <text y={-2} textAnchor="middle" fontSize={isSel ? 16 : 14}
+                    opacity={dimmed ? 0.1 : 0.85} style={{ pointerEvents: "none" }}>
                     {ROLE_EMOJI[node.role] || "●"}
                   </text>
-                  <text y={R + 16} textAnchor="middle"
-                    fontSize={isSel ? 13.5 : 12} fontWeight={isSel ? "700" : "600"}
-                    fill={fs.color} opacity={dimmed ? 0.12 : 1}
-                    style={{ pointerEvents: "none", fontFamily: "'IM Fell English', 'Palatino Linotype', Georgia, serif" }}>
-                    {node.label}
-                  </text>
-                  <text y={R + 29} textAnchor="middle" fontSize="10"
-                    fill={bookColor || "#8a6a3a"} opacity={dimmed ? 0.08 : bookColor ? 0.85 : 0.45}
-                    fontWeight={bookColor ? "700" : "400"}
-                    style={{ pointerEvents: "none", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                    Bk {node.book}
-                  </text>
+                  {(isSel || isHov || getProminence(node.id) >= 4) && (
+                    <text y={R + 16} textAnchor="middle"
+                      fontSize={isSel ? 13 : isHov ? 12 : 11} fontWeight={isSel ? "700" : isHov ? "600" : "500"}
+                      fill={isSel || isHov ? fs.color : "#3d2000"}
+                      opacity={dimmed ? 0.12 : isSel || isHov ? 1 : 0.75}
+                      style={{ pointerEvents: "none", fontFamily: "'IM Fell English', 'Palatino Linotype', Georgia, serif" }}>
+                      {node.label}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -727,9 +716,9 @@ export default function DCCDag() {
         {/* Legend + Layout switcher */}
         <div style={{
           position: "absolute", bottom: 14, left: 14,
-          background: "linear-gradient(170deg, #f5e6c8 0%, #e8d09a 100%)",
-          border: "2px solid #8b6914",
-          boxShadow: "3px 3px 12px rgba(0,0,0,0.35), inset 0 0 30px rgba(139,105,20,0.1)", borderRadius: 10, padding: "11px 13px",
+          background: "linear-gradient(170deg, #f5ead0 0%, #ecddb8 100%)",
+          border: "1px solid rgba(139,105,20,0.45)",
+          boxShadow: "2px 2px 10px rgba(0,0,0,0.18), inset 0 0 20px rgba(139,105,20,0.06)", borderRadius: 10, padding: "11px 13px",
           minWidth: 168, maxHeight: "calc(100vh - 80px)", overflowY: "auto",
         }}>
           {/* Layout toggle */}
@@ -1034,7 +1023,7 @@ function CookbookPage() {
   };
 
   return (
-    <div className="cb-page" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", background: "linear-gradient(160deg, #eddcb0 0%, #e0c98a 50%, #dfc99a 100%)" }}>
+    <div className="cb-page" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", background: "linear-gradient(160deg, #f5ead0 0%, #ecddb8 50%, #e8d5a8 100%)" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 28px 80px" }}>
 
         {/* Page header */}
