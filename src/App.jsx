@@ -176,7 +176,7 @@ export default function DCCDag() {
     const maxX = Math.max(...arr.map(v => v.x)) + 100;
     const minY = Math.min(...arr.map(v => v.y)) - 100;
     const maxY = Math.max(...arr.map(v => v.y)) + 100;
-    const z = Math.min(1.8, Math.max(0.15, Math.min(rect.width / (maxX - minX || 1), rect.height / (maxY - minY || 1)) * 0.85));
+    const z = Math.min(1.0, Math.max(0.15, Math.min(rect.width / (maxX - minX || 1), rect.height / (maxY - minY || 1)) * 0.85));
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
     setPan({ x: rect.width / 2 - cx * z, y: rect.height / 2 - cy * z });
     setZoom(z);
@@ -283,11 +283,11 @@ export default function DCCDag() {
     const dx = tp.x - fp.x, dy = tp.y - fp.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
     const ux = dx / len, uy = dy / len;
-    const R = 34;
+    const R = 22;
     return {
       x1: fp.x + ux * R, y1: fp.y + uy * R,
-      x2: tp.x - ux * (R + 10), y2: tp.y - uy * (R + 10),
-      mx: (fp.x + tp.x) / 2 - uy * 26, my: (fp.y + tp.y) / 2 + ux * 26,
+      x2: tp.x - ux * (R + 8), y2: tp.y - uy * (R + 8),
+      mx: (fp.x + tp.x) / 2 - uy * 20, my: (fp.y + tp.y) / 2 + ux * 20,
     };
   }, []);
 
@@ -440,8 +440,8 @@ export default function DCCDag() {
               const isSel = selectedIds.has(node.id);
               const isHov = hovered === node.id;
               const isDim = connectedToSelected && !connectedToSelected.has(node.id);
-              const baseR = Math.round(20 + getProminence(node.id) * 2.5);
-              const R = isSel ? baseR + 5 : isHov ? baseR + 3 : baseR;
+              const baseR = Math.round(12 + getProminence(node.id) * 1.5);
+              const R = isSel ? baseR + 4 : isHov ? baseR + 3 : baseR;
               return (
                 <g key={node.id} transform={"translate(" + pos.x + "," + pos.y + ")"}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
@@ -454,9 +454,9 @@ export default function DCCDag() {
                     strokeWidth={isSel ? 3 : isHov ? 2.5 : isAdded ? 2 : 1.5}
                     opacity={isDim ? 0.18 : 1}
                     style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 8px " + fs.color + "55)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.15))" }} />
-                  <text y={1} textAnchor="middle" fontSize="11" opacity={isDim ? 0.12 : 0.7} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
-                  <text y={R + 18} textAnchor="middle"
-                    fontSize={isSel ? 15 : isHov ? 14 : 13}
+                  <text y={1} textAnchor="middle" fontSize="10" opacity={isDim ? 0.12 : 0.7} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
+                  <text y={R + 14} textAnchor="middle"
+                    fontSize={isSel ? 12 : isHov ? 11 : 10}
                     fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
                     fill={isSel || isHov || isAdded ? fs.color : "#3d2000"}
                     opacity={isDim ? 0.1 : 1}
