@@ -159,8 +159,7 @@ export const PROMINENCE = {
   ferdinand: 4, architect_houston: 4, d_nadia: 3, stockade: 3, eris: 4, eileithyia: 3,
   beatrice: 3, chris_andrews: 3,
   prince_stalwart: 3, maestro: 3, prince_gurgle: 2,
-  remex: 3, drakea: 2, porthus: 2, herot: 2,
-  rosetta_thagra: 2, milk: 2,
+  remex: 3, drakea: 2, herot: 2,
   epitome_tagg: 2,
   king_rust: 4, formidable: 3, porthus: 4,
   rosetta_thagra: 5, tipid: 3, milk: 3, justice_light: 4, volteeg: 3, vinata: 3,
@@ -549,7 +548,7 @@ export default function DCCDag() {
   const switchLayout = useCallback((id) => {
     setLayout(id);
     centerGraph(DEFAULT_ZOOM[id], id);
-    setSelected(null);
+    setSelectedIds(new Set());
   }, [centerGraph]);
 
   return (
@@ -1417,7 +1416,7 @@ function Sidebar({ node, onSelect }) {
       <div style={{ paddingBottom: 15, borderBottom: `1px solid ${fs.color}44`, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ fontSize: 26 }}>{ROLE_EMOJI[node.role] || "●"}</span>
-          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${bookColor}10`, color: bookColor, border: `1px solid ${bookColor}55`, fontFamily: "monospace", borderRadius: 2, fontFamily: "monospace" }}>Book {node.book}</span>
+          <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 2, background: `${bookColor}10`, color: bookColor, border: `1px solid ${bookColor}55`, fontFamily: "monospace" }}>Book {node.book}</span>
         </div>
         <h2 style={{ margin: "0 0 7px", fontSize: 18, color: fs.color, lineHeight: 1.2, fontFamily: "Cinzel, 'Palatino Linotype', Georgia, serif", letterSpacing: "0.04em" }}>{node.label}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 11 }}>
