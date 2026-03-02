@@ -66,9 +66,9 @@ function runForceLayout(nodeIds, edges, existingPositions, centerX, centerY, ite
   const nodes = nodeIds.map(id => getNodeById(id)).filter(Boolean);
   if (nodes.length === 0) return {};
   const W = 2400, H = 1600;
-  const K = Math.sqrt((W * H) / Math.max(nodes.length, 1)) * 0.7;
-  const REPULSION = K * K * 1.8;
-  const SPRING = 0.012;
+  const K = Math.sqrt((W * H) / Math.max(nodes.length, 1)) * 0.85;
+  const REPULSION = K * K * 2.4;
+  const SPRING = 0.010;
   const DAMPING = 0.78;
   const pos = {}, vel = {};
   const pinned = new Set();
@@ -146,6 +146,7 @@ export default function DCCDag() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [rosterSearch, setRosterSearch] = useState("");
   const [hovered, setHovered] = useState(null);
+  const [hoveredEdge, setHoveredEdge] = useState(null); // index into visibleEdges
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1.0);
   const dragging = useRef(null);
@@ -282,11 +283,11 @@ export default function DCCDag() {
     const dx = tp.x - fp.x, dy = tp.y - fp.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
     const ux = dx / len, uy = dy / len;
-    const R = 26;
+    const R = 34;
     return {
       x1: fp.x + ux * R, y1: fp.y + uy * R,
-      x2: tp.x - ux * (R + 8), y2: tp.y - uy * (R + 8),
-      mx: (fp.x + tp.x) / 2 - uy * 22, my: (fp.y + tp.y) / 2 + ux * 22,
+      x2: tp.x - ux * (R + 10), y2: tp.y - uy * (R + 10),
+      mx: (fp.x + tp.x) / 2 - uy * 26, my: (fp.y + tp.y) / 2 + ux * 26,
     };
   }, []);
 
@@ -389,8 +390,8 @@ export default function DCCDag() {
           onMouseDown={onSvgMouseDown} onClick={() => { if (selectedIds.size > 0) setSelectedIds(new Set()); }}>
           <defs>
             {Object.entries(EDGE_STYLE).map(([type, s]) => (
-              <marker key={type} id={"arr-" + type} markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L8,3 z" fill={s.color} opacity="0.9" />
+              <marker key={type} id={"arr-" + type} markerWidth="10" markerHeight="10" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L0,8 L10,4 z" fill={s.color} opacity="0.85" />
               </marker>
             ))}
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -412,15 +413,20 @@ export default function DCCDag() {
               const { x1, y1, x2, y2, mx, my } = computeEdgePath(fn, tn);
               const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
               const isActive = connectedToSelected && (selectedIds.has(e.from) || selectedIds.has(e.to) || hovered === e.from || hovered === e.to);
-              const isDim = connectedToSelected && !isActive;
+              const isEdgeHov = hoveredEdge === i;
+              const isDim = connectedToSelected && !isActive && !isEdgeHov;
+              const pathD = "M" + x1 + "," + y1 + " Q" + mx + "," + my + " " + x2 + "," + y2;
               return (
-                <g key={e.from + "-" + e.to + "-" + i}>
-                  <path d={"M" + x1 + "," + y1 + " Q" + mx + "," + my + " " + x2 + "," + y2}
-                    fill="none" stroke={es.color} strokeWidth={isActive ? 2.2 : 1.0}
-                    strokeOpacity={isDim ? 0.08 : isActive ? 0.85 : 0.3}
+                <g key={e.from + "-" + e.to + "-" + i}
+                  onMouseEnter={() => setHoveredEdge(i)} onMouseLeave={() => setHoveredEdge(null)}>
+                  {/* Fat invisible hit area */}
+                  <path d={pathD} fill="none" stroke="transparent" strokeWidth="14" style={{ cursor: "pointer" }} />
+                  <path d={pathD}
+                    fill="none" stroke={es.color}
+                    strokeWidth={isEdgeHov ? 3.5 : isActive ? 2.2 : 1.2}
+                    strokeOpacity={isDim ? 0.08 : isEdgeHov ? 0.95 : isActive ? 0.7 : 0.25}
                     markerEnd={"url(#arr-" + e.type + ")"}
-                    style={{ transition: "stroke-opacity 0.15s, stroke-width 0.15s" }} />
-                  {isActive && <text x={mx} y={my - 7} fontSize="9" fill={es.color} opacity="0.85" textAnchor="middle" pointerEvents="none" style={{ fontFamily: "monospace" }}>{e.label}</text>}
+                    style={{ transition: "stroke-opacity 0.15s, stroke-width 0.15s", pointerEvents: "none" }} />
                 </g>
               );
             })}
@@ -434,26 +440,27 @@ export default function DCCDag() {
               const isSel = selectedIds.has(node.id);
               const isHov = hovered === node.id;
               const isDim = connectedToSelected && !connectedToSelected.has(node.id);
-              const baseR = Math.round(14 + getProminence(node.id) * 2.0);
-              const R = isSel ? baseR + 6 : isHov ? baseR + 4 : baseR;
+              const baseR = Math.round(20 + getProminence(node.id) * 2.5);
+              const R = isSel ? baseR + 5 : isHov ? baseR + 3 : baseR;
               return (
                 <g key={node.id} transform={"translate(" + pos.x + "," + pos.y + ")"}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
                   onClick={e => { e.stopPropagation(); if (dragging.current && dragging.current.moved) return; if (!isAdded) addCharacter(node.id); else setSelectedIds(prev => { const s = new Set(prev); s.has(node.id) ? s.delete(node.id) : s.add(node.id); return s; }); }}
-                  onMouseEnter={() => setHovered(node.id)} onMouseLeave={() => setHovered(null)} style={{ cursor: "pointer" }}>
-                  {(isSel || isHov) && <circle r={R + 8} fill="none" stroke={fs.color} strokeWidth={isSel ? 2 : 1} opacity={isSel ? 0.45 : 0.18} />}
-                  {isAdded && !isSel && !isHov && <circle r={R + 4} fill="none" stroke={fs.color} strokeWidth={1} opacity={0.2} strokeDasharray="3,3" />}
-                  <circle r={R} fill={isSel ? fs.dim : isHov ? "#fdf5e0" : isAdded ? fs.dim : "#f8efd4"} stroke={fs.color}
-                    strokeWidth={isSel ? 2.5 : isHov ? 2 : isAdded ? 2 : 1.2} opacity={isDim ? 0.2 : 1}
-                    style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 6px " + fs.color + "66)" : "drop-shadow(0 1px 2px rgba(0,0,0,0.14))" }} />
-                  <text y={-1} textAnchor="middle" fontSize={isSel ? 15 : 13} opacity={isDim ? 0.15 : 0.85} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
-                  {(isSel || isHov || isAdded || getProminence(node.id) >= 4) && (
-                    <text y={R + 15} textAnchor="middle" fontSize={isSel ? 13 : isHov ? 12 : 11}
-                      fontWeight={isSel ? "700" : isHov ? "600" : isAdded ? "600" : "500"}
-                      fill={isSel || isHov || isAdded ? fs.color : "#3d2000"}
-                      opacity={isDim ? 0.12 : isSel || isHov || isAdded ? 1 : 0.65}
-                      style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{node.label}</text>
-                  )}
+                  onMouseEnter={() => { setHovered(node.id); setHoveredEdge(null); }} onMouseLeave={() => setHovered(null)} style={{ cursor: "pointer" }}>
+                  {(isSel || isHov) && <circle r={R + 6} fill="none" stroke={fs.color} strokeWidth={isSel ? 2.5 : 1.5} opacity={isSel ? 0.5 : 0.25} />}
+                  <circle r={R}
+                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : isAdded ? fs.dim : "#f8efd4"}
+                    stroke={fs.color}
+                    strokeWidth={isSel ? 3 : isHov ? 2.5 : isAdded ? 2 : 1.5}
+                    opacity={isDim ? 0.18 : 1}
+                    style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 8px " + fs.color + "55)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.15))" }} />
+                  <text y={1} textAnchor="middle" fontSize="11" opacity={isDim ? 0.12 : 0.7} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
+                  <text y={R + 18} textAnchor="middle"
+                    fontSize={isSel ? 15 : isHov ? 14 : 13}
+                    fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
+                    fill={isSel || isHov || isAdded ? fs.color : "#3d2000"}
+                    opacity={isDim ? 0.1 : 1}
+                    style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{node.label}</text>
                 </g>
               );
             })}
@@ -475,27 +482,66 @@ export default function DCCDag() {
         {/* Zoom */}
         <div style={{ position: "absolute", bottom: 14, right: 14, background: "rgba(245,230,200,0.92)", borderRadius: 3, padding: "3px 9px", fontSize: 10, color: "#6b4c1a", border: "1px solid rgba(139,105,20,0.3)", fontFamily: "monospace" }}>{Math.round(zoom * 100)}%</div>
 
-        {/* Hover tooltip */}
-        {hovered && (() => {
+        {/* Hover tooltip — edge or node */}
+        {hoveredEdge !== null && (() => {
+          const e = visibleEdges[hoveredEdge];
+          if (!e) return null;
+          const fromNode = getNodeById(e.from);
+          const toNode = getNodeById(e.to);
+          if (!fromNode || !toNode) return null;
+          const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
+          const fromFs = FACTION_STYLE[fromNode.faction];
+          const toFs = FACTION_STYLE[toNode.faction];
+          return (
+            <div style={{ position: "absolute", bottom: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(160deg, #2a1500 0%, #1a0c00 100%)", border: "1px solid " + es.color + "88", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", borderRadius: 6, padding: "12px 18px", minWidth: 240, maxWidth: 400, pointerEvents: "none", zIndex: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: fromFs.color, fontFamily: "Cinzel, Georgia, serif" }}>{fromNode.label}</span>
+                <span style={{ fontSize: 11, color: es.color, fontFamily: "monospace" }}>→</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: toFs.color, fontFamily: "Cinzel, Georgia, serif" }}>{toNode.label}</span>
+              </div>
+              <div style={{ fontSize: 13, color: "#e8d5a3", lineHeight: 1.6, fontFamily: "'IM Fell English', Georgia, serif", marginBottom: 6 }}>{e.label}</div>
+              <div style={{ fontSize: 10, color: es.color, fontFamily: "monospace", opacity: 0.7 }}>{e.type}</div>
+            </div>
+          );
+        })()}
+        {hovered && hoveredEdge === null && (() => {
           const hn = getNodeById(hovered);
           if (!hn) return null;
           const hfs = FACTION_STYLE[hn.faction];
           const he = EDGES.filter(e => e.from === hovered || e.to === hovered);
+          const visHe = he.filter(e => visibleIds.has(e.from) && visibleIds.has(e.to));
           const onCanvas = visibleIds.has(hovered);
           return (
-            <div style={{ position: "absolute", bottom: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(160deg, #2a1500 0%, #1a0c00 100%)", border: "1px solid " + hfs.color + "66", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", borderRadius: 6, padding: "11px 16px", minWidth: 200, maxWidth: 340, pointerEvents: "none", zIndex: 20 }}>
+            <div style={{ position: "absolute", bottom: 60, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(160deg, #2a1500 0%, #1a0c00 100%)", border: "1px solid " + hfs.color + "66", boxShadow: "0 4px 20px rgba(0,0,0,0.5)", borderRadius: 6, padding: "12px 18px", minWidth: 240, maxWidth: 420, pointerEvents: "none", zIndex: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 18 }}>{ROLE_EMOJI[hn.role] || "●"}</span>
+                <span style={{ fontSize: 20 }}>{ROLE_EMOJI[hn.role] || "●"}</span>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: hfs.color, fontFamily: "Cinzel, Georgia, serif" }}>{hn.label}</div>
-                  <div style={{ fontSize: 10, color: "rgba(201,168,76,0.5)", fontFamily: "monospace" }}>{hfs.label} · Bk {hn.book} · {hn.role}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: hfs.color, fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.04em" }}>{hn.label}</div>
+                  <div style={{ fontSize: 10, color: "rgba(201,168,76,0.5)", fontFamily: "monospace" }}>{hfs.label} · Book {hn.book} · {hn.role}</div>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: "#c9a87a", lineHeight: 1.7, fontFamily: "'IM Fell English', Georgia, serif", fontStyle: "italic", marginBottom: 6 }}>
-                {hn.desc ? hn.desc.slice(0, 140) + (hn.desc.length > 140 ? "…" : "") : ""}
+              <div style={{ fontSize: 13, color: "#c9a87a", lineHeight: 1.75, fontFamily: "'IM Fell English', Georgia, serif", fontStyle: "italic", marginBottom: 8 }}>
+                {hn.desc ? hn.desc.slice(0, 220) + (hn.desc.length > 220 ? "…" : "") : ""}
               </div>
-              <div style={{ fontSize: 10, color: "rgba(201,168,76,0.4)", fontFamily: "monospace" }}>
-                {he.length} relationship{he.length !== 1 ? "s" : ""} · {!onCanvas ? "click to add" : addedIds.has(hovered) ? "click to select" : "click to expand"}
+              {visHe.length > 0 && (
+                <div style={{ borderTop: "1px solid rgba(201,168,76,0.15)", paddingTop: 6 }}>
+                  {visHe.slice(0, 5).map((re, ri) => {
+                    const other = re.from === hovered ? getNodeById(re.to) : getNodeById(re.from);
+                    const dir = re.from === hovered ? "→" : "←";
+                    const efs = other ? FACTION_STYLE[other.faction] : null;
+                    return (
+                      <div key={ri} style={{ fontSize: 11, color: "#c9a87a", marginBottom: 3, fontFamily: "monospace" }}>
+                        <span style={{ color: "rgba(201,168,76,0.4)" }}>{dir}</span>{" "}
+                        <span style={{ color: efs ? efs.color : "#c9a87a", fontWeight: 600 }}>{other ? other.label : "?"}</span>{" "}
+                        <span style={{ color: "rgba(201,168,76,0.35)", fontSize: 10 }}>{re.label}</span>
+                      </div>
+                    );
+                  })}
+                  {visHe.length > 5 && <div style={{ fontSize: 10, color: "rgba(201,168,76,0.3)", fontFamily: "monospace" }}>+{visHe.length - 5} more</div>}
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: "rgba(201,168,76,0.35)", fontFamily: "monospace", marginTop: 6 }}>
+                {he.length} total relationship{he.length !== 1 ? "s" : ""} · {!onCanvas ? "click to add" : addedIds.has(hovered) ? "click to select" : "click to expand"}
               </div>
             </div>
           );
