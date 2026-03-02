@@ -262,11 +262,42 @@ function prominencePositions(nodes, edges, iters = 380) {
   return pos;
 }
 
+// Arc layout: all nodes on a single horizontal line, Carl in center
+// Ordered: Book 1-7 sorted by faction proximity to Carl, Carl anchored at center
+function arcPositions(nodes) {
+  const Y = 400; // vertical center
+  const SPACING = 52;
+  
+  // Sort nodes: party first, then by book, then by faction closeness to Carl
+  const FACTION_ORDER = ["PARTY","MEADOWLARK","CRAWLERS","ANTAGONISTS","NPCS","SYSTEM","MEDIA","BACKSTORY"];
+  const sorted = [...nodes].sort((a, b) => {
+    if (a.id === "carl") return 0;
+    if (b.id === "carl") return 0;
+    const bookDiff = a.book - b.book;
+    if (bookDiff !== 0) return bookDiff;
+    const faDiff = FACTION_ORDER.indexOf(a.faction) - FACTION_ORDER.indexOf(b.faction);
+    if (faDiff !== 0) return faDiff;
+    return a.label.localeCompare(b.label);
+  });
+
+  // Place Carl at center
+  const carlIdx = sorted.findIndex(n => n.id === "carl");
+  const totalW = (sorted.length - 1) * SPACING;
+  const startX = -totalW / 2 + carlIdx * SPACING;
+  
+  const pos = {};
+  sorted.forEach((n, i) => {
+    pos[n.id] = { x: startX + i * SPACING + totalW / 2, y: Y };
+  });
+  return pos;
+}
+
 const LAYOUTS = [
   { id: "manual",       label: "Manual",    icon: "✦", desc: "Hand-tuned" },
   { id: "hierarchical", label: "Story Arc", icon: "⟶", desc: "Books as columns" },
   { id: "force",        label: "Force",     icon: "⬡", desc: "Physics" },
   { id: "prominence",   label: "Prominence",icon: "◎", desc: "Sized by importance" },
+  { id: "arc",          label: "Arc",       icon: "⌒", desc: "Linear with arc connections" },
 ];
 
 // ─── Styles ────────────────────────────────────────────────────────────────
@@ -337,15 +368,16 @@ export default function DCCDag() {
     hierarchical: null,
     force: null,
     prominence: prominencePositions(NODES, EDGES),
+    arc: arcPositions(NODES),
   }));
 
   // Per-layout user drag overrides
-  const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {}, prominence: {} });
+  const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {}, prominence: {}, arc: {} });
 
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   // Graph bounding box (manual layout) — computed once
-  const GRAPH_BOUNDS = { minX: 0, maxX: 3800, minY: 0, maxY: 2600 };
+  const GRAPH_BOUNDS = { minX: -200, maxX: 6200, minY: 0, maxY: 2600 };
   const [pan, setPan] = useState({ x: 0, y: 20 });
   const [zoom, setZoom] = useState(0.72);
   const [filterFaction, setFilterFaction] = useState("ALL");
@@ -357,6 +389,7 @@ export default function DCCDag() {
   // Compute layout when switching
   useEffect(() => {
     if (positionsByLayout[layout] !== null) return;
+    if (layout === "arc") { setPositionsByLayout(prev => ({ ...prev, arc: arcPositions(NODES) })); return; }
     setIsComputing(true);
     // Run in a timeout so the UI can show "computing" first
     const tid = setTimeout(() => {
@@ -369,6 +402,7 @@ export default function DCCDag() {
       if (layout === "hierarchical") computed = hierarchicalPositions(NODES);
       if (layout === "force")        computed = forceDirectedPositions(NODES, EDGES);
       if (layout === "prominence")   computed = prominencePositions(NODES, EDGES);
+      if (layout === "arc")          computed = arcPositions(NODES);
       setPositionsByLayout(prev => ({ ...prev, [layout]: computed }));
       setIsComputing(false);
     }, 40);
@@ -484,27 +518,34 @@ export default function DCCDag() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [onWheel]);
 
-  const centerGraph = useCallback((targetZoom) => {
+  const centerGraph = useCallback((targetZoom, layoutId) => {
     const el = svgRef.current;
     if (!el) return;
     const { width, height } = el.getBoundingClientRect();
     if (width === 0) return;
-    const { minX, maxX, minY, maxY } = GRAPH_BOUNDS;
+    const lId = layoutId ?? layout;
+    // For arc layout, compute bounds from actual positions
+    let bounds = GRAPH_BOUNDS;
+    if (lId === "arc") {
+      // arc: ~112 nodes * 52px spacing, centered. Use wide/shallow bounds
+      bounds = { minX: -200, maxX: 5900, minY: 60, maxY: 780 };
+    }
+    const { minX, maxX, minY, maxY } = bounds;
     const graphW = maxX - minX;
     const graphH = maxY - minY;
     const fitZoom = targetZoom ?? Math.min(width / graphW, height / graphH) * 0.88;
-    const z = Math.min(0.82, Math.max(0.35, fitZoom));
+    const z = Math.min(0.82, Math.max(0.12, fitZoom));
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     setPan({ x: width / 2 - cx * z, y: height / 2 - cy * z });
     setZoom(z);
-  }, []);
+  }, [layout]);
 
-  const DEFAULT_ZOOM = { manual: null, hierarchical: 0.38, force: 0.55, prominence: 0.55 };
+  const DEFAULT_ZOOM = { manual: null, hierarchical: 0.38, force: 0.55, prominence: 0.55, arc: 0.28 };
 
   const switchLayout = useCallback((id) => {
     setLayout(id);
-    centerGraph(DEFAULT_ZOOM[id]);
+    centerGraph(DEFAULT_ZOOM[id], id);
     setSelected(null);
   }, [centerGraph]);
 
@@ -627,7 +668,48 @@ export default function DCCDag() {
 
           <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
             <rect x="-9999" y="-9999" width="22000" height="22000" fill="rgba(210,185,130,0.0)" />
-            {visibleEdges.map((e, i) => {
+            {layout === "arc" && (() => {
+              const posVals = Object.values(positions || {});
+              if (posVals.length === 0) return null;
+              const minX = Math.min(...posVals.map(p => p.x)) - 40;
+              const maxX = Math.max(...posVals.map(p => p.x)) + 40;
+              const y = posVals[0].y;
+              return <line x1={minX} y1={y} x2={maxX} y2={y} stroke="#8b6914" strokeWidth="1" strokeOpacity="0.3" />;
+            })()}
+            {layout === "arc" ? (
+              // Arc layout: arcs above (ally/party) or below (antagonist/kill), hover-only
+              activeId && visibleEdges
+                .filter(e => e.from === activeId || e.to === activeId)
+                .map((e, i) => {
+                  const fn = positions[e.from], tn = positions[e.to];
+                  if (!fn || !tn) return null;
+                  const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
+                  const x1 = fn.x, x2 = tn.x, y = fn.y;
+                  const hostile = ["killed","antagonizes","hunts","puppet","coerces","tricks"].includes(e.type);
+                  const mid = (x1 + x2) / 2;
+                  const span = Math.abs(x2 - x1);
+                  const height = Math.min(span * 0.55, 420);
+                  const cy = hostile ? y + height : y - height;
+                  const otherNode = e.from === activeId ? getNodeById(e.to) : getNodeById(e.from);
+                  const otherFs = otherNode ? FACTION_STYLE[otherNode.faction] : null;
+                  return (
+                    <g key={i}>
+                      <path d={`M${x1},${y} Q${mid},${cy} ${x2},${y}`}
+                        fill="none" stroke={es.color}
+                        strokeWidth={2}
+                        strokeOpacity={0.75}
+                        markerEnd={`url(#arr-${e.type})`}
+                      />
+                      <text x={mid} y={hostile ? cy + 14 : cy - 6}
+                        fontSize="10" fill={es.color} opacity="0.9"
+                        textAnchor="middle" pointerEvents="none"
+                        style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>
+                        {e.label}
+                      </text>
+                    </g>
+                  );
+                })
+            ) : visibleEdges.map((e, i) => {
               const fn = positions[e.from], tn = positions[e.to];
               if (!fn || !tn) return null;
               const { x1, y1, x2, y2, mx, my } = computeArrow(fn, tn);
@@ -659,8 +741,10 @@ export default function DCCDag() {
               const fs = FACTION_STYLE[node.faction];
               const isSel = selected === node.id;
               const isHov = hovered === node.id;
-              const dimmed = connectedIds && !connectedIds.has(node.id);
-              const baseR = layout === "prominence" ? Math.round(12 + getProminence(node.id) * 3.0) : 24;
+              const dimmed = layout !== "arc" && connectedIds && !connectedIds.has(node.id);
+              const isArcActive = layout === "arc" && activeId && (activeId === node.id || (connectedIds && connectedIds.has(node.id)));
+              const isArcFaded = layout === "arc" && activeId && !isArcActive;
+              const baseR = layout === "prominence" ? Math.round(12 + getProminence(node.id) * 3.0) : layout === "arc" ? 10 : 24;
               const R = isSel ? baseR + 8 : isHov ? baseR + 5 : baseR;
               const bookColor = node.book === 3 ? "#2d6a2d" : node.book === 2 ? "#5c2d8e" : null;
               return (
@@ -676,18 +760,29 @@ export default function DCCDag() {
                       strokeWidth={isSel ? 2 : 1} opacity={isSel ? 0.45 : 0.18} />
                   )}
                   <circle r={R}
-                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : "#f8efd4"}
+                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : isArcActive ? fs.dim : "#f8efd4"}
                     stroke={fs.color}
-                    strokeWidth={isSel ? 2.5 : isHov ? 2 : 1.5}
-                    opacity={dimmed ? 0.2 : 1}
-                    style={{ transition: "all 0.14s ease", filter: isSel ? `drop-shadow(0 0 6px ${fs.color}66)` : "drop-shadow(0 1px 2px rgba(0,0,0,0.14))" }}
+                    strokeWidth={isSel ? 2.5 : isHov ? 2 : isArcActive ? 2 : 1.5}
+                    opacity={dimmed ? 0.2 : isArcFaded ? 0.18 : 1}
+                    style={{ transition: "all 0.12s ease", filter: isSel || isHov ? `drop-shadow(0 0 6px ${fs.color}66)` : "drop-shadow(0 1px 2px rgba(0,0,0,0.14))" }}
                   />
 
-                  <text y={-2} textAnchor="middle" fontSize={isSel ? 16 : 14}
-                    opacity={dimmed ? 0.1 : 0.85} style={{ pointerEvents: "none" }}>
-                    {ROLE_EMOJI[node.role] || "●"}
-                  </text>
-                  {(isSel || isHov || getProminence(node.id) >= 4) && (
+                  {layout !== "arc" && (
+                    <text y={-2} textAnchor="middle" fontSize={isSel ? 16 : 14}
+                      opacity={dimmed ? 0.1 : 0.85} style={{ pointerEvents: "none" }}>
+                      {ROLE_EMOJI[node.role] || "●"}
+                    </text>
+                  )}
+                  {layout === "arc" ? (
+                    (isHov || isSel || isArcActive) && (
+                      <text y={R + 15} textAnchor="middle"
+                        fontSize={isHov || isSel ? 12 : 10} fontWeight={isHov || isSel ? "700" : "500"}
+                        fill={isHov || isSel ? fs.color : "#5a3a1a"}
+                        style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>
+                        {node.label}
+                      </text>
+                    )
+                  ) : (isSel || isHov || getProminence(node.id) >= 4) && (
                     <text y={R + 16} textAnchor="middle"
                       fontSize={isSel ? 13 : isHov ? 12 : 11} fontWeight={isSel ? "700" : isHov ? "600" : "500"}
                       fill={isSel || isHov ? fs.color : "#3d2000"}
@@ -1022,169 +1117,159 @@ function CookbookPage() {
     b7: AUTHORS.filter(a => a.b7).length,
   };
 
+  const C = {
+    bg: "linear-gradient(160deg, #f5ead0 0%, #ecddb8 50%, #e8d5a8 100%)",
+    ink: "#1e0f00",
+    dim: "#6b4c1a",
+    gold: "#8b6914",
+    border: "rgba(139,105,20,0.25)",
+    rowHover: "rgba(139,105,20,0.08)",
+    rowOpen: "rgba(255,248,230,0.9)",
+    cinzel: "Cinzel, 'Palatino Linotype', Georgia, serif",
+    fell: "'IM Fell English', 'Palatino Linotype', Georgia, serif",
+  };
+
   return (
-    <div className="cb-page" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", background: "linear-gradient(160deg, #f5ead0 0%, #ecddb8 50%, #e8d5a8 100%)" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 28px 80px" }}>
+    <div style={{ flex: 1, overflowY: "auto", background: C.bg, fontFamily: C.fell, color: C.ink }}>
 
-        {/* Page header */}
-        <div style={{ marginBottom: 26, paddingBottom: 20, borderBottom: "2px solid rgba(139,105,20,0.3)" }}>
-          <div style={{ fontSize: 10, color: "#8b6914", letterSpacing: "0.18em", fontFamily: "Cinzel, Georgia, serif", textTransform: "uppercase", marginBottom: 8 }}>
-            Reference
-          </div>
-          <h1 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 700, color: "#3d1a00", letterSpacing: "0.06em", textShadow: "1px 1px 0 rgba(139,105,20,0.3)", fontFamily: "Cinzel, 'Palatino Linotype', Georgia, serif" }}>
-            ⚡ The Dungeon Anarchist's Cookbook
-          </h1>
-          <p style={{ margin: "0 0 18px", fontSize: 14, color: "#4a2e00", lineHeight: 1.9, maxWidth: 700, fontFamily: "'IM Fell English', Palatino, Georgia, serif", fontStyle: "italic" }}>
-            Created by the System AI in the 15th season. Passed to crawlers meeting unknown criteria.
-            Neither audience nor production can see its contents. Disappears on death or retirement.
-            25 known editions. Most of its authors did not survive.
-          </p>
-          {/* Stat row */}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[
-              { label: "Editions",        val: 25,           col: "#8b2500" },
-              { label: "Named Authors",   val: 23,           col: "#2a1500" },
-              { label: "Confirmed Dead",  val: totals.dead,  col: "#6b0000" },
-              { label: "Confirmed Alive", val: totals.alive, col: "#2d6a2d" },
-              { label: "Active in B7",    val: totals.b7,    col: "#5c2d8e" },
-            ].map(s => (
-              <div key={s.label} style={{ background: "rgba(139,105,20,0.06)", border: `1px solid ${s.col}44`, borderRadius: 8, padding: "9px 18px", minWidth: 90, textAlign: "center" }}>
-                <div className="cb-stat-val" style={{ fontSize: 24, fontWeight: 700, color: s.col, lineHeight: 1 }}>{s.val}</div>
-                <div className="cb-stat-label" style={{ fontSize: 10, color: "#6b4c1a", marginTop: 4, fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.04em" }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
+      {/* ── Header ── */}
+      <div style={{ padding: "32px 40px 20px", borderBottom: `2px solid ${C.border}` }}>
+        <div style={{ fontSize: 10, color: C.gold, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: C.cinzel, marginBottom: 8 }}>
+          Reference Compendium
         </div>
-
-        {/* Filter bar */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search name, race, contributions…"
-            style={{
-              flex: 1, minWidth: 200,
-              background: "rgba(245,230,200,0.7)", border: "1px solid rgba(139,105,20,0.35)",
-              borderRadius: 3, color: "#2a1500", padding: "7px 13px", fontSize: 13,
-              outline: "none", fontFamily: "Georgia,'Times New Roman',serif",
-            }}
-          />
-          {["ALL","alive","dead","unknown"].map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)} style={{
-              background: filterStatus === s ? "rgba(139,105,20,0.18)" : "rgba(139,105,20,0.06)",
-              border: filterStatus === s ? "1px solid rgba(139,105,20,0.55)" : "1px solid rgba(139,105,20,0.2)",
-              borderRadius: 3, color: filterStatus === s ? "#3d2000" : "#6b4c1a",
-              padding: "6px 14px", fontSize: 13, cursor: "pointer",
-            }}>
-              {s === "ALL" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
-            </button>
+        <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 700, fontFamily: C.cinzel, color: "#2a0f00", letterSpacing: "0.05em" }}>
+          The Dungeon Anarchist's Cookbook
+        </h1>
+        <p style={{ margin: "0 0 20px", fontSize: 15, lineHeight: 1.85, color: "#3d2000", maxWidth: 680, fontStyle: "italic" }}>
+          Created by the System AI in the 15th season. Passed to crawlers meeting unknown criteria —
+          neither audience nor production can see its contents. Disappears on death or retirement.
+          25 known editions. Most of its authors did not survive.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {[
+            { val: 25,           label: "Editions",       col: "#5c1a00" },
+            { val: totals.dead,  label: "Confirmed Slain", col: "#6b0000" },
+            { val: totals.alive, label: "Living",          col: "#1a4a1a" },
+            { val: totals.b7,    label: "Active in Bk 7",  col: "#3a1a6e" },
+          ].map(s => (
+            <div key={s.label} style={{ textAlign: "center", minWidth: 80, padding: "10px 18px", background: "rgba(139,105,20,0.08)", border: `1px solid ${s.col}33`, borderRadius: 4 }}>
+              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: C.cinzel, color: s.col, lineHeight: 1 }}>{s.val}</div>
+              <div style={{ fontSize: 10.5, color: C.gold, marginTop: 4, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: C.cinzel }}>{s.label}</div>
+            </div>
           ))}
-          <span style={{ fontSize: 11, color: "#8b6914", marginLeft: 2 }}>{filtered.length}/{AUTHORS.length}</span>
-        </div>
-
-        {/* Author cards */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {filtered.map(a => {
-            const sc = STATUS_CONFIG[a.status];
-            const isOpen = expanded === a.ed;
-            return (
-              <div key={a.ed}
-                style={{
-                  background: isOpen ? "rgba(245,230,200,0.7)" : "rgba(139,105,20,0.04)",
-                  border: `1px solid ${isOpen ? "rgba(139,105,20,0.45)" : "rgba(139,105,20,0.18)"}`,
-                  borderLeft: isOpen ? `3px solid ${sc.color}` : "3px solid transparent",
-                  borderRadius: 8, overflow: "hidden", transition: "background 0.15s, border-color 0.15s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = "rgba(139,105,20,0.1)"; }}
-                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "rgba(139,105,20,0.04)"; }}
-                onClick={() => setExpanded(isOpen ? null : a.ed)}>
-
-                {/* Collapsed row */}
-                <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", alignItems: "center", gap: 16, padding: "13px 18px" }}>
-                  {/* Edition badge */}
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "#8b2500", lineHeight: 1, fontFamily: "Cinzel, Georgia, serif" }}>{a.ed}</div>
-                    <div style={{ fontSize: 9, color: "#8b6914", letterSpacing: "0.08em", fontFamily: "monospace" }}>{a.suffix} ed.</div>
-                  </div>
-
-                  {/* Name + race */}
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span className="cb-name" style={{ fontSize: 15, fontWeight: 700, color: a.isUnknown ? "#8b6914" : "#2a1500", fontFamily: "'IM Fell English', Palatino, Georgia, serif", fontStyle: a.isUnknown ? "italic" : "normal" }}>
-                        {a.name}
-                      </span>
-                      {a.b7 && (
-                        <span style={{ fontSize: 10, background: "rgba(92,45,142,0.1)", color: "#5c2d8e", border: "1px solid rgba(92,45,142,0.35)", borderRadius: 2, fontFamily: "Cinzel, Georgia, serif", borderRadius: 4, padding: "1px 7px", letterSpacing: "0.06em" }}>
-                          BOOK 7
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: "#6b4c1a", marginTop: 2, fontStyle: "italic", fontFamily: "'IM Fell English', Palatino, Georgia, serif" }}>
-                      {a.race !== "Unknown" && <span>{a.race}</span>}
-                      {a.race !== "Unknown" && a.season && <span style={{ color: "#44403c" }}> · </span>}
-                      {a.season && <span style={{ fontStyle: "italic", color: "#6b4c1a" }}>{a.season}</span>}
-                    </div>
-                  </div>
-
-                  {/* Status + chevron */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ fontSize: 11, padding: "2px 10px", borderRadius: 2, background: sc.bg, color: sc.color, border: `1px solid ${sc.color}55`, fontFamily: "'IM Fell English', Georgia, serif" }}>
-                        {sc.label}
-                      </span>
-                      {a.statusNote && (
-                        <div style={{ fontSize: 10.5, color: sc.color, opacity: 0.8, marginTop: 3, fontStyle: "italic", maxWidth: 220, textAlign: "right" }}>
-                          {a.statusNote}
-                        </div>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 16, color: "#8b6914", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</span>
-                  </div>
-                </div>
-
-                {/* Expanded detail */}
-                {isOpen && (
-                  <div style={{ borderTop: "1px solid rgba(139,105,20,0.25)", padding: "18px 20px 20px", background: "rgba(0,0,0,0.02)" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="cb-grid">
-                      <div>
-                        <div style={{ fontSize: 9, color: "#8b6914", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8, fontFamily: "Cinzel, Georgia, serif" }}>
-                          Contributions &amp; Crawl Notes
-                        </div>
-                        <p className="cb-body" style={{ margin: 0, fontSize: 13.5, color: "#2a1500", lineHeight: 1.85, fontFamily: "'IM Fell English', Palatino, Georgia, serif" }}>{a.contributions}</p>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 9, color: "#8b6914", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8, fontFamily: "Cinzel, Georgia, serif" }}>
-                          Whereabouts — End of Book 7
-                        </div>
-                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.8, color: a.status === "dead" ? "#6b0000" : a.status === "alive" ? "#2d6a2d" : "#6b4c1a", opacity: 0.9 }}>
-                          {a.whereabouts}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer note */}
-        <div style={{ marginTop: 32, padding: "14px 18px", background: "rgba(255,255,255,0.02)", borderRadius: 7, border: "1px solid rgba(255,255,255,0.05)", fontSize: 12, color: "#8b6914", lineHeight: 1.85, fontStyle: "italic", fontFamily: "'IM Fell English', Georgia, serif" }}>
-          The 1st Edition has no confirmed author. The 23rd Edition exists (gap between Drakea's 22nd and Rickard's 24th) but its author is unnamed through Book 7.
-          Status reflects known facts as of <em style={{ color: "#4a2e00" }}>This Inevitable Ruin</em> (Book 7).
         </div>
       </div>
 
+      {/* ── Filter bar ── */}
+      <div style={{ display: "flex", gap: 8, padding: "14px 40px", alignItems: "center", borderBottom: `1px solid ${C.border}`, background: "rgba(139,105,20,0.04)" }}>
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search name, race, or contributions…"
+          style={{ flex: 1, minWidth: 200, maxWidth: 360, background: "rgba(255,248,230,0.8)", border: `1px solid ${C.border}`, borderRadius: 3, color: C.ink, padding: "7px 12px", fontSize: 14, outline: "none", fontFamily: C.fell }} />
+        {["ALL","alive","dead","unknown"].map(s => {
+          const labels = { ALL:"All Authors", alive:"Living", dead:"Slain", unknown:"Unknown" };
+          const active = filterStatus === s;
+          return (
+            <button key={s} onClick={() => setFilterStatus(s)} style={{
+              background: active ? "rgba(139,105,20,0.18)" : "transparent",
+              border: active ? `1px solid rgba(139,105,20,0.5)` : `1px solid ${C.border}`,
+              borderRadius: 3, color: active ? "#2a0f00" : C.dim,
+              padding: "6px 14px", fontSize: 13, cursor: "pointer", fontFamily: C.fell,
+            }}>{labels[s]}</button>
+          );
+        })}
+        <span style={{ fontSize: 12, color: C.gold, marginLeft: 4, fontFamily: "monospace" }}>{filtered.length} / {AUTHORS.length}</span>
+      </div>
+
+      {/* ── Table ── */}
+      <div style={{ padding: "0 40px 60px" }}>
+        {/* Column headers */}
+        <div style={{ display: "grid", gridTemplateColumns: "52px 1fr 180px 110px 90px 28px", gap: 0, padding: "12px 16px 10px", borderBottom: `2px solid ${C.border}`, marginTop: 16 }}>
+          {["Ed.", "Author", "Race", "Status", "Book 7?", ""].map((h, i) => (
+            <div key={i} style={{ fontSize: 10, color: C.gold, letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: C.cinzel }}>{h}</div>
+          ))}
+        </div>
+
+        {filtered.map(a => {
+          const sc = STATUS_CONFIG[a.status];
+          const isOpen = expanded === a.ed;
+          return (
+            <div key={a.ed} style={{ borderBottom: `1px solid ${C.border}` }}>
+              {/* Main row */}
+              <div
+                onClick={() => setExpanded(isOpen ? null : a.ed)}
+                style={{
+                  display: "grid", gridTemplateColumns: "52px 1fr 180px 110px 90px 28px",
+                  gap: 0, padding: "13px 16px", cursor: "pointer",
+                  background: isOpen ? C.rowOpen : "transparent",
+                  transition: "background 0.12s",
+                  borderLeft: isOpen ? `3px solid ${sc.color}` : "3px solid transparent",
+                }}
+                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = C.rowHover; }}
+                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = "transparent"; }}>
+
+                {/* Ed number */}
+                <div style={{ fontSize: 18, fontWeight: 700, fontFamily: C.cinzel, color: "#5c1a00", lineHeight: 1.2 }}>
+                  {a.ed}<span style={{ fontSize: 9, color: C.gold, marginLeft: 1, fontFamily: "monospace" }}>{a.suffix}</span>
+                </div>
+
+                {/* Name */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 16, fontWeight: a.isUnknown ? 400 : 600, color: a.isUnknown ? C.dim : C.ink, fontStyle: a.isUnknown ? "italic" : "normal" }}>
+                    {a.name}
+                  </span>
+                  {a.b7 && <span style={{ fontSize: 9.5, background: "rgba(58,26,110,0.1)", color: "#3a1a6e", border: "1px solid rgba(58,26,110,0.3)", borderRadius: 2, padding: "1px 6px", letterSpacing: "0.06em", fontFamily: C.cinzel }}>BK 7</span>}
+                </div>
+
+                {/* Race */}
+                <div style={{ fontSize: 13.5, color: C.dim, fontStyle: "italic", paddingRight: 8, lineHeight: 1.3 }}>{a.race !== "Unknown" ? a.race : "—"}</div>
+
+                {/* Status */}
+                <div>
+                  <span style={{ fontSize: 12.5, padding: "3px 10px", borderRadius: 2, background: sc.bg, color: sc.color, border: `1px solid ${sc.color}44`, fontFamily: C.cinzel, letterSpacing: "0.04em" }}>
+                    {sc.label}
+                  </span>
+                </div>
+
+                {/* Book 7 active */}
+                <div style={{ fontSize: 13, color: a.b7 ? "#3a1a6e" : C.border, textAlign: "center" }}>
+                  {a.b7 ? "✦" : "·"}
+                </div>
+
+                {/* Chevron */}
+                <div style={{ fontSize: 14, color: C.gold, textAlign: "right", transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.18s" }}>›</div>
+              </div>
+
+              {/* Expanded detail */}
+              {isOpen && (
+                <div style={{ padding: "20px 20px 24px 68px", background: C.rowOpen, borderTop: `1px solid ${C.border}` }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }} className="cb-grid">
+                    <div>
+                      <div style={{ fontSize: 9.5, color: C.gold, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: C.cinzel, marginBottom: 10 }}>Contributions & Crawl Notes</div>
+                      <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.9, color: "#2a1000" }}>{a.contributions}</p>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9.5, color: C.gold, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: C.cinzel, marginBottom: 10 }}>Whereabouts — End of Book 7</div>
+                      <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.9, color: a.status === "dead" ? "#5a0000" : a.status === "alive" ? "#0f3a0f" : C.dim }}>{a.whereabouts}</p>
+                      {a.season && <p style={{ margin: "12px 0 0", fontSize: 12, color: C.gold, fontStyle: "italic" }}>{a.season}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        <p style={{ marginTop: 24, fontSize: 12.5, color: C.gold, fontStyle: "italic", lineHeight: 1.8 }}>
+          The 1st Edition has no confirmed author. The 23rd Edition (between Drakea's 22nd and Rickard's 24th) exists but its author is unnamed through Book 7.
+          All status reflects <em>This Inevitable Ruin</em> (Book 7).
+        </p>
+      </div>
+
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap');
         .cb-grid { grid-template-columns: 1fr 1fr; }
-        @media (max-width: 700px) { .cb-grid { grid-template-columns: 1fr !important; } }
-        input::placeholder { color: #8b6914; opacity: 0.7; }
-        .cb-page { font-size: clamp(13px, 1.4vw, 16px); }
-        .cb-page h1 { font-size: clamp(18px, 2.2vw, 28px) !important; }
-        .cb-page .cb-name { font-size: clamp(13px, 1.2vw, 16px) !important; }
-        .cb-page .cb-body { font-size: clamp(12px, 1.1vw, 14px) !important; }
-        .cb-stat-val { font-size: clamp(18px, 2vw, 26px) !important; }
-        .cb-stat-label { font-size: clamp(10px, 0.9vw, 12px) !important; }
+        @media (max-width: 720px) { .cb-grid { grid-template-columns: 1fr !important; } }
+        input::placeholder { color: #8b6914; opacity: 0.6; }
       `}</style>
     </div>
   );
