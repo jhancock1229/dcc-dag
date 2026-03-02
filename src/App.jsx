@@ -606,7 +606,7 @@ export default function DCCDag() {
               style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 3, color: "#c9a84c", padding: "4px 11px", fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif", letterSpacing: "0.04em" }}>
               ↺ Reset View
             </button>
-            {selected && (
+            {selectedIds.size > 0 && (
               <button onClick={() => setSelectedIds(new Set())}
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: "rgba(201,168,76,0.5)", padding: "4px 11px", fontSize: 11, cursor: "pointer" }}>
                 ✕ Clear
