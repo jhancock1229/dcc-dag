@@ -374,7 +374,8 @@ export default function DCCDag() {
   // Per-layout user drag overrides
   const [userDrag, setUserDrag] = useState({ manual: {}, hierarchical: {}, force: {}, prominence: {}, arc: {} });
 
-  const [selected, setSelected] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set(["carl"]));
+  const [rosterSearch, setRosterSearch] = useState("");
   const [hovered, setHovered] = useState(null);
   // Graph bounding box (manual layout) — computed once
   const GRAPH_BOUNDS = { minX: -200, maxX: 6200, minY: 0, maxY: 2600 };
@@ -455,8 +456,8 @@ export default function DCCDag() {
     return merged;
   }, [positionsByLayout, userDrag, layout]);
 
-  const selectedNode = selected ? NODES.find(n => n.id === selected) : null;
-  const activeId = hovered || selected;
+  const activeId = hovered || (selectedIds.size === 1 ? [...selectedIds][0] : null);
+  const toggleSelected = (id) => setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
 
   const visibleNodes = NODES.filter(n => {
     if (filterFaction !== "ALL" && n.faction !== filterFaction) return false;
@@ -466,9 +467,14 @@ export default function DCCDag() {
   const visibleIds = new Set(visibleNodes.map(n => n.id));
   const visibleEdges = EDGES.filter(e => visibleIds.has(e.from) && visibleIds.has(e.to));
 
-  const connectedIds = activeId
-    ? new Set([activeId, ...visibleEdges.filter(e => e.from === activeId || e.to === activeId).map(e => e.from === activeId ? e.to : e.from)])
-    : null;
+  // For arc: union of all connections for all selected IDs
+  const connectedIds = selectedIds.size > 0
+    ? new Set([...selectedIds, ...visibleEdges
+        .filter(e => selectedIds.has(e.from) || selectedIds.has(e.to))
+        .flatMap(e => [e.from, e.to])])
+    : activeId
+      ? new Set([activeId, ...visibleEdges.filter(e => e.from === activeId || e.to === activeId).map(e => e.from === activeId ? e.to : e.from)])
+      : null;
 
   const onNodeMouseDown = useCallback((e, id) => {
     e.stopPropagation();
@@ -578,7 +584,7 @@ export default function DCCDag() {
           {page === "dag" && <>
             <div style={{ display: "flex", gap: 3 }}>
               {["ALL","1","2","3","4","5","6","7"].map(b => (
-                <button key={b} onClick={() => { setFilterBook(b); setSelected(null); }}
+                <button key={b} onClick={() => { setFilterBook(b); setSelectedIds(new Set()); }}
                   style={{
                     background: filterBook === b ? "rgba(201,168,76,0.25)" : "rgba(255,255,255,0.06)",
                     border: filterBook === b ? "1px solid rgba(201,168,76,0.7)" : "1px solid rgba(201,168,76,0.2)",
@@ -590,7 +596,7 @@ export default function DCCDag() {
                 </button>
               ))}
             </div>
-            <select value={filterFaction} onChange={e => { setFilterFaction(e.target.value); setSelected(null); }}
+            <select value={filterFaction} onChange={e => { setFilterFaction(e.target.value); setSelectedIds(new Set()); }}
               style={{ background: "#1a0c00", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 3, color: "#c9a84c", padding: "4px 9px", fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>
               <option value="ALL">All Groups</option>
               {Object.entries(FACTION_STYLE).map(([k, v]) => (
@@ -602,7 +608,7 @@ export default function DCCDag() {
               ↺ Reset View
             </button>
             {selected && (
-              <button onClick={() => setSelected(null)}
+              <button onClick={() => setSelectedIds(new Set())}
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: "rgba(201,168,76,0.5)", padding: "4px 11px", fontSize: 11, cursor: "pointer" }}>
                 ✕ Clear
               </button>
@@ -617,6 +623,101 @@ export default function DCCDag() {
 
       {page === "cookbook" && <CookbookPage />}
       {page === "dag" && <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+
+        {/* ── Left Roster Panel ── */}
+        <div style={{
+          width: 230, flexShrink: 0, display: "flex", flexDirection: "column",
+          background: "linear-gradient(180deg, #1e0e00 0%, #160900 100%)",
+          borderRight: "2px solid #8b6914",
+          boxShadow: "3px 0 16px rgba(0,0,0,0.35)",
+          zIndex: 10,
+        }}>
+          {/* Roster header */}
+          <div style={{ padding: "12px 12px 8px", borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
+            <div style={{ fontSize: 9, color: "rgba(201,168,76,0.5)", letterSpacing: "0.18em", textTransform: "uppercase", fontFamily: "Cinzel, Georgia, serif", marginBottom: 6 }}>
+              Characters
+            </div>
+            <input
+              value={rosterSearch}
+              onChange={e => setRosterSearch(e.target.value)}
+              placeholder="Search…"
+              style={{
+                width: "100%", background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(201,168,76,0.25)", borderRadius: 3,
+                color: "#e8d5a3", padding: "5px 9px", fontSize: 12, outline: "none",
+                fontFamily: "'IM Fell English', Georgia, serif",
+                boxSizing: "border-box",
+              }}
+            />
+            {selectedIds.size > 0 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 7 }}>
+                <span style={{ fontSize: 10, color: "rgba(201,168,76,0.6)", fontFamily: "monospace" }}>
+                  {selectedIds.size} selected
+                </span>
+                <button onClick={() => setSelectedIds(new Set())}
+                  style={{ fontSize: 10, color: "rgba(201,168,76,0.45)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px" }}>
+                  clear all
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Roster list */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
+            {Object.entries(FACTION_STYLE).map(([factionKey, fStyle]) => {
+              const factionNodes = NODES.filter(n => n.faction === factionKey && (
+                !rosterSearch || n.label.toLowerCase().includes(rosterSearch.toLowerCase())
+              ));
+              if (factionNodes.length === 0) return null;
+              return (
+                <div key={factionKey}>
+                  <div style={{
+                    padding: "5px 12px 3px",
+                    fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase",
+                    color: fStyle.color, fontFamily: "Cinzel, Georgia, serif", opacity: 0.7,
+                  }}>
+                    {fStyle.label}
+                  </div>
+                  {factionNodes
+                    .sort((a, b) => a.book - b.book || a.label.localeCompare(b.label))
+                    .map(node => {
+                      const isSel = selectedIds.has(node.id);
+                      const isHov = hovered === node.id;
+                      return (
+                        <div key={node.id}
+                          onClick={() => toggleSelected(node.id)}
+                          onMouseEnter={() => setHovered(node.id)}
+                          onMouseLeave={() => setHovered(null)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 7,
+                            padding: "5px 12px",
+                            background: isSel ? `${fStyle.color}22` : isHov ? "rgba(255,255,255,0.05)" : "transparent",
+                            borderLeft: isSel ? `3px solid ${fStyle.color}` : "3px solid transparent",
+                            cursor: "pointer", transition: "background 0.1s",
+                          }}>
+                          <span style={{ fontSize: 13 }}>{ROLE_EMOJI[node.role] || "●"}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              fontSize: 12, color: isSel ? fStyle.color : "#c9a87a",
+                              fontWeight: isSel ? 700 : 400,
+                              fontFamily: "'IM Fell English', Georgia, serif",
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                            }}>
+                              {node.label}
+                            </div>
+                            <div style={{ fontSize: 9.5, color: "rgba(201,168,76,0.35)", fontFamily: "monospace" }}>
+                              Bk {node.book}
+                            </div>
+                          </div>
+                          {isSel && <span style={{ fontSize: 9, color: fStyle.color, opacity: 0.8 }}>✦</span>}
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
         {/* Computing overlay */}
         {isComputing && (
           <div style={{
@@ -631,7 +732,7 @@ export default function DCCDag() {
         )}
 
         <svg ref={svgRef} style={{ flex: 1, display: "block", cursor: "grab" }}
-          onMouseDown={onSvgMouseDown} onClick={() => setSelected(null)}>
+          onMouseDown={onSvgMouseDown} onClick={() => setSelectedIds(new Set())}>
           <defs>
             {Object.entries(EDGE_STYLE).map(([type, s]) => (
               <marker key={type} id={`arr-${type}`} markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -674,38 +775,47 @@ export default function DCCDag() {
               return <line x1={minX} y1={y} x2={maxX} y2={y} stroke="#8b6914" strokeWidth="1" strokeOpacity="0.3" />;
             })()}
             {layout === "arc" ? (
-              // Arc layout: arcs above (ally/party) or below (antagonist/kill), hover-only
-              activeId && visibleEdges
-                .filter(e => e.from === activeId || e.to === activeId)
-                .map((e, i) => {
-                  const fn = positions[e.from], tn = positions[e.to];
-                  if (!fn || !tn) return null;
-                  const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
-                  const x1 = fn.x, x2 = tn.x, y = fn.y;
-                  const hostile = ["killed","antagonizes","hunts","puppet","coerces","tricks"].includes(e.type);
-                  const mid = (x1 + x2) / 2;
-                  const span = Math.abs(x2 - x1);
-                  const height = Math.min(span * 0.55, 420);
-                  const cy = hostile ? y + height : y - height;
-                  const otherNode = e.from === activeId ? getNodeById(e.to) : getNodeById(e.from);
-                  const otherFs = otherNode ? FACTION_STYLE[otherNode.faction] : null;
-                  return (
-                    <g key={i}>
-                      <path d={`M${x1},${y} Q${mid},${cy} ${x2},${y}`}
-                        fill="none" stroke={es.color}
-                        strokeWidth={2}
-                        strokeOpacity={0.75}
-                        markerEnd={`url(#arr-${e.type})`}
-                      />
-                      <text x={mid} y={hostile ? cy + 14 : cy - 6}
-                        fontSize="10" fill={es.color} opacity="0.9"
-                        textAnchor="middle" pointerEvents="none"
-                        style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>
-                        {e.label}
-                      </text>
-                    </g>
-                  );
-                })
+              // Arc layout: arcs for all selected + hovered characters
+              (() => {
+                const activeSet = new Set([...selectedIds, ...(hovered ? [hovered] : [])]);
+                if (activeSet.size === 0) return null;
+                return visibleEdges
+                  .filter(e => activeSet.has(e.from) || activeSet.has(e.to))
+                  .map((e, i) => {
+                    const fn = positions[e.from], tn = positions[e.to];
+                    if (!fn || !tn) return null;
+                    const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
+                    // Source node determines arc color
+                    const srcNode = getNodeById(e.from);
+                    const srcFs = srcNode ? FACTION_STYLE[srcNode.faction] : null;
+                    const isFromSelected = activeSet.has(e.from);
+                    const arcColor = isFromSelected ? (srcFs?.color || es.color) : es.color;
+                    const x1 = fn.x, x2 = tn.x, y = fn.y;
+                    const hostile = ["killed","antagonizes","hunts","puppet","coerces","tricks"].includes(e.type);
+                    const mid = (x1 + x2) / 2;
+                    const span = Math.abs(x2 - x1);
+                    const height = Math.min(span * 0.52, 380);
+                    const cy = hostile ? y + height : y - height;
+                    // Highlight if both ends are selected (cross-character edge)
+                    const isCross = selectedIds.has(e.from) && selectedIds.has(e.to);
+                    return (
+                      <g key={`${e.from}-${e.to}-${i}`}>
+                        <path d={`M${x1},${y} Q${mid},${cy} ${x2},${y}`}
+                          fill="none" stroke={arcColor}
+                          strokeWidth={isCross ? 3 : 1.8}
+                          strokeOpacity={isCross ? 0.95 : 0.7}
+                          markerEnd={`url(#arr-${e.type})`}
+                        />
+                        <text x={mid} y={hostile ? cy + 13 : cy - 5}
+                          fontSize="10" fill={arcColor} opacity="0.88"
+                          textAnchor="middle" pointerEvents="none"
+                          style={{ fontFamily: "monospace", letterSpacing: "0.03em" }}>
+                          {e.label}
+                        </text>
+                      </g>
+                    );
+                  });
+              })()
             ) : visibleEdges.map((e, i) => {
               const fn = positions[e.from], tn = positions[e.to];
               if (!fn || !tn) return null;
@@ -736,18 +846,18 @@ export default function DCCDag() {
               const pos = positions[node.id];
               if (!pos) return null;
               const fs = FACTION_STYLE[node.faction];
-              const isSel = selected === node.id;
+              const isSel = selectedIds.has(node.id);
               const isHov = hovered === node.id;
               const dimmed = layout !== "arc" && connectedIds && !connectedIds.has(node.id);
-              const isArcActive = layout === "arc" && activeId && (activeId === node.id || (connectedIds && connectedIds.has(node.id)));
-              const isArcFaded = layout === "arc" && activeId && !isArcActive;
+              const isArcActive = layout === "arc" && (selectedIds.has(node.id) || (connectedIds && connectedIds.has(node.id)) || (hovered && (hovered === node.id || (connectedIds && connectedIds.has(node.id)))));
+              const isArcFaded = layout === "arc" && (selectedIds.size > 0 || hovered) && !isArcActive;
               const baseR = layout === "prominence" ? Math.round(12 + getProminence(node.id) * 3.0) : layout === "arc" ? 10 : 24;
               const R = isSel ? baseR + 8 : isHov ? baseR + 5 : baseR;
               const bookColor = node.book === 3 ? "#2d6a2d" : node.book === 2 ? "#5c2d8e" : null;
               return (
                 <g key={node.id} transform={`translate(${pos.x},${pos.y})`}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
-                  onClick={e => { e.stopPropagation(); setSelected(isSel ? null : node.id); }}
+                  onClick={e => { e.stopPropagation(); toggleSelected(node.id); }}
                   onMouseEnter={() => setHovered(node.id)}
                   onMouseLeave={() => setHovered(null)}
                   style={{ cursor: "pointer" }}>
@@ -771,10 +881,10 @@ export default function DCCDag() {
                     </text>
                   )}
                   {layout === "arc" ? (
-                    (isHov || isSel || isArcActive) && (
+                    (isHov || isSel) && (
                       <text y={R + 15} textAnchor="middle"
-                        fontSize={isHov || isSel ? 12 : 10} fontWeight={isHov || isSel ? "700" : "500"}
-                        fill={isHov || isSel ? fs.color : "#5a3a1a"}
+                        fontSize={isHov || isSel ? 12 : 10} fontWeight={isSel ? "700" : "600"}
+                        fill={isSel ? fs.color : "#c9a87a"}
                         style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>
                         {node.label}
                       </text>
@@ -794,20 +904,11 @@ export default function DCCDag() {
           </g>
         </svg>
 
-        {/* Sidebar */}
-        <div style={{
-          width: selectedNode ? 315 : 0, minWidth: selectedNode ? 315 : 0,
-          overflow: "hidden", transition: "all 0.27s cubic-bezier(.4,0,.2,1)",
-          borderLeft: "1px solid rgba(180,83,9,0.12)",
-          background: "rgba(4,4,10,0.95)", backdropFilter: "blur(20px)",
-          flexShrink: 0,
-        }}>
-          {selectedNode && <Sidebar node={selectedNode} onSelect={setSelected} />}
-        </div>
+
 
         {/* Legend + Layout switcher */}
         <div style={{
-          position: "absolute", bottom: 14, left: 14,
+          position: "absolute", bottom: 14, right: 60,
           background: "linear-gradient(170deg, #f5ead0 0%, #ecddb8 100%)",
           border: "1px solid rgba(139,105,20,0.45)",
           boxShadow: "2px 2px 10px rgba(0,0,0,0.18), inset 0 0 20px rgba(139,105,20,0.06)", borderRadius: 10, padding: "11px 13px",
@@ -861,13 +962,47 @@ export default function DCCDag() {
         </div>
 
         <div style={{
-          position: "absolute", bottom: 14, right: selectedNode ? 329 : 14,
+          position: "absolute", bottom: 14, right: 14,
           background: "rgba(245,230,200,0.92)", borderRadius: 3,
           padding: "3px 9px", fontSize: 10, color: "#6b4c1a",
           border: "1px solid rgba(139,105,20,0.3)", boxShadow: "1px 1px 4px rgba(0,0,0,0.15)", fontFamily: "monospace",
         }}>
           {Math.round(zoom * 100)}%
         </div>
+
+        {/* Hover tooltip */}
+        {hovered && (() => {
+          const hn = NODES.find(n => n.id === hovered);
+          if (!hn) return null;
+          const hfs = FACTION_STYLE[hn.faction];
+          const hedges = EDGES.filter(e => e.from === hovered || e.to === hovered);
+          return (
+            <div style={{
+              position: "absolute", bottom: 60, left: "50%", transform: "translateX(-50%)",
+              background: "linear-gradient(160deg, #2a1500 0%, #1a0c00 100%)",
+              border: `1px solid ${hfs.color}66`,
+              boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px ${hfs.color}22`,
+              borderRadius: 6, padding: "11px 16px", minWidth: 200, maxWidth: 320,
+              pointerEvents: "none", zIndex: 20,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 18 }}>{ROLE_EMOJI[hn.role] || "●"}</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: hfs.color, fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.04em" }}>{hn.label}</div>
+                  <div style={{ fontSize: 10, color: "rgba(201,168,76,0.5)", fontFamily: "monospace" }}>{hfs.label} · Bk {hn.book} · {hn.role}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: "#c9a87a", lineHeight: 1.7, fontFamily: "'IM Fell English', Georgia, serif", fontStyle: "italic", marginBottom: hedges.length > 0 ? 8 : 0 }}>
+                {hn.desc?.slice(0, 120)}{hn.desc?.length > 120 ? "…" : ""}
+              </div>
+              {hedges.length > 0 && (
+                <div style={{ fontSize: 10, color: "rgba(201,168,76,0.4)", fontFamily: "monospace" }}>
+                  {hedges.length} relationship{hedges.length !== 1 ? "s" : ""} · click to select
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>}
 
       <style>{`
