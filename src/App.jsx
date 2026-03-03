@@ -396,20 +396,20 @@ export default function DCCDag() {
         zIndex: 50, flexShrink: 0, gap: 8, minHeight: 48, overflow: "hidden",
       }}>
         <div style={{ flexShrink: 1, overflow: "hidden", whiteSpace: "nowrap" }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#c9a84c", letterSpacing: "0.12em", textTransform: "uppercase", textShadow: "0 0 20px rgba(201,168,76,0.5), 0 1px 3px rgba(0,0,0,0.8)", fontFamily: "'Cinzel', 'Palatino Linotype', Georgia, serif" }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#c9a84c", letterSpacing: "0.12em", textTransform: "uppercase", textShadow: "0 0 20px rgba(201,168,76,0.5), 0 1px 3px rgba(0,0,0,0.8)", fontFamily: "'Cinzel', 'Palatino Linotype', Georgia, serif" }}>
             ⚔ Dungeon Crawler Carl
           </span>
-          <span className="dag-subtitle" style={{ marginLeft: 10, fontSize: 10, color: "rgba(201,168,76,0.45)", letterSpacing: "0.06em", fontFamily: "monospace" }}>
+          <span className="dag-subtitle" style={{ marginLeft: 10, fontSize: 12, color: "rgba(201,168,76,0.55)", letterSpacing: "0.06em", fontFamily: "monospace" }}>
             Books 1–7 · Character DAG · {NODES.length} characters · {EDGES.length} edges
           </span>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
           {page === "dag" && addedIds.size > 0 && <>
-            <button onClick={() => centerView()} style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 3, color: "#c9a84c", padding: "4px 11px", fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>⊞ Fit View</button>
-            <button onClick={clearAll} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: "rgba(201,168,76,0.5)", padding: "4px 11px", fontSize: 11, cursor: "pointer" }}>✕ Clear All</button>
+            <button onClick={() => centerView()} style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 3, color: "#c9a84c", padding: "5px 13px", fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>⊞ Fit View</button>
+            <button onClick={clearAll} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: "rgba(201,168,76,0.5)", padding: "5px 13px", fontSize: 13, cursor: "pointer" }}>✕ Clear All</button>
           </>}
           <button onClick={() => setPage(p => p === "cookbook" ? "dag" : "cookbook")}
-            style={{ background: page === "cookbook" ? "rgba(201,168,76,0.2)" : "rgba(255,255,255,0.05)", border: page === "cookbook" ? "1px solid rgba(201,168,76,0.6)" : "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: page === "cookbook" ? "#c9a84c" : "rgba(201,168,76,0.5)", padding: "4px 12px", fontSize: 11, cursor: "pointer", fontFamily: "Georgia, serif" }}>
+            style={{ background: page === "cookbook" ? "rgba(201,168,76,0.2)" : "rgba(255,255,255,0.05)", border: page === "cookbook" ? "1px solid rgba(201,168,76,0.6)" : "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: page === "cookbook" ? "#c9a84c" : "rgba(201,168,76,0.5)", padding: "5px 14px", fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>
             📖 Cookbook Authors
           </button>
         </div>
@@ -419,15 +419,15 @@ export default function DCCDag() {
       {page === "dag" && <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
 
         {/* ── Left Roster ── */}
-        <div style={{ width: 230, flexShrink: 0, display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #1e0e00 0%, #160900 100%)", borderRight: "2px solid #8b6914", boxShadow: "3px 0 16px rgba(0,0,0,0.35)", zIndex: 10 }}>
+        <div style={{ width: 280, flexShrink: 0, display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #1e0e00 0%, #160900 100%)", borderRight: "2px solid #8b6914", boxShadow: "3px 0 16px rgba(0,0,0,0.35)", zIndex: 10 }}>
           <div style={{ padding: "12px 12px 8px", borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
-            <div style={{ fontSize: 9, color: "rgba(201,168,76,0.5)", letterSpacing: "0.18em", textTransform: "uppercase", fontFamily: "Cinzel, Georgia, serif", marginBottom: 6 }}>Click characters to build graph</div>
+            <div style={{ fontSize: 11, color: "rgba(201,168,76,0.65)", letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: "Cinzel, Georgia, serif", marginBottom: 6 }}>Click characters to build graph</div>
             <input value={rosterSearch} onChange={e => setRosterSearch(e.target.value)} placeholder="Search…"
-              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 3, color: "#e8d5a3", padding: "5px 9px", fontSize: 12, outline: "none", fontFamily: "'IM Fell English', Georgia, serif", boxSizing: "border-box" }} />
+              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 3, color: "#e8d5a3", padding: "7px 10px", fontSize: 14, outline: "none", fontFamily: "'IM Fell English', Georgia, serif", boxSizing: "border-box" }} />
             {addedIds.size > 0 && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 7 }}>
-                <span style={{ fontSize: 10, color: "rgba(201,168,76,0.6)", fontFamily: "monospace" }}>{visibleIds.size} on graph · {addedIds.size} pinned</span>
-                <button onClick={clearAll} style={{ fontSize: 10, color: "rgba(201,168,76,0.45)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px" }}>clear</button>
+                <span style={{ fontSize: 12, color: "rgba(201,168,76,0.7)", fontFamily: "monospace" }}>{visibleIds.size} on graph · {addedIds.size} pinned</span>
+                <button onClick={clearAll} style={{ fontSize: 12, color: "rgba(201,168,76,0.55)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px" }}>clear</button>
               </div>
             )}
           </div>
@@ -437,24 +437,24 @@ export default function DCCDag() {
               if (fn.length === 0) return null;
               return (
                 <div key={fk}>
-                  <div style={{ padding: "5px 12px 3px", fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: fStyle.color, fontFamily: "Cinzel, Georgia, serif", opacity: 0.7 }}>{fStyle.label}</div>
+                  <div style={{ padding: "5px 12px 3px", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: fStyle.color, fontFamily: "Cinzel, Georgia, serif", opacity: 0.8 }}>{fStyle.label}</div>
                   {fn.sort((a, b) => a.book - b.book || a.label.localeCompare(b.label)).map(node => {
                     const isAdded = addedIds.has(node.id);
                     const isOnCanvas = visibleIds.has(node.id);
                     const isHov = hovered === node.id;
                     return (
                       <div key={node.id} onClick={() => toggleRoster(node.id)} onMouseEnter={() => setHovered(node.id)} onMouseLeave={() => setHovered(null)}
-                        style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 12px",
+                        style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px",
                           background: isAdded ? fStyle.color + "22" : isOnCanvas ? fStyle.color + "0d" : isHov ? "rgba(255,255,255,0.05)" : "transparent",
                           borderLeft: isAdded ? "3px solid " + fStyle.color : isOnCanvas ? "3px solid " + fStyle.color + "55" : "3px solid transparent",
                           cursor: "pointer", transition: "background 0.1s" }}>
-                        <span style={{ fontSize: 13 }}>{ROLE_EMOJI[node.role] || "●"}</span>
+                        <span style={{ fontSize: 16 }}>{ROLE_EMOJI[node.role] || "●"}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, color: isAdded ? fStyle.color : isOnCanvas ? fStyle.color + "cc" : "#c9a87a", fontWeight: isAdded ? 700 : isOnCanvas ? 500 : 400, fontFamily: "'IM Fell English', Georgia, serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{node.label}</div>
-                          <div style={{ fontSize: 9.5, color: "rgba(201,168,76,0.35)", fontFamily: "monospace" }}>Bk {node.book}</div>
+                          <div style={{ fontSize: 15, color: isAdded ? fStyle.color : isOnCanvas ? fStyle.color + "cc" : "#c9a87a", fontWeight: isAdded ? 700 : isOnCanvas ? 500 : 400, fontFamily: "'IM Fell English', Georgia, serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{node.label}</div>
+                          <div style={{ fontSize: 12, color: "rgba(201,168,76,0.45)", fontFamily: "monospace" }}>Bk {node.book}</div>
                         </div>
-                        {isAdded && <span onClick={(e) => { e.stopPropagation(); removeCharacter(node.id); }} style={{ fontSize: 9, color: "rgba(201,168,76,0.4)", padding: "2px 4px", cursor: "pointer" }} title="Remove from graph">✕</span>}
-                        {!isAdded && isOnCanvas && <span style={{ fontSize: 8, color: "rgba(201,168,76,0.3)", fontFamily: "monospace" }}>linked</span>}
+                        {isAdded && <span onClick={(e) => { e.stopPropagation(); removeCharacter(node.id); }} style={{ fontSize: 12, color: "rgba(201,168,76,0.5)", padding: "2px 6px", cursor: "pointer" }} title="Remove from graph">✕</span>}
+                        {!isAdded && isOnCanvas && <span style={{ fontSize: 11, color: "rgba(201,168,76,0.4)", fontFamily: "monospace" }}>linked</span>}
                       </div>
                     );
                   })}
@@ -533,9 +533,9 @@ export default function DCCDag() {
                     strokeWidth={isSel ? 3 : isHov ? 2.5 : isAdded ? 2 : 1.5}
                     opacity={isDim ? 0.18 : 1}
                     style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 8px " + fs.color + "55)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.15))" }} />
-                  <text y={1} textAnchor="middle" fontSize="10" opacity={isDim ? 0.12 : 0.7} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
-                  <text y={R + 14} textAnchor="middle"
-                    fontSize={isSel ? 12 : isHov ? 11 : 10}
+                  <text y={1} textAnchor="middle" fontSize="12" opacity={isDim ? 0.12 : 0.75} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
+                  <text y={R + 16} textAnchor="middle"
+                    fontSize={isSel ? 16 : isHov ? 15 : 14}
                     fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
                     fill={isSel || isHov || isAdded ? fs.color : "#3d2000"}
                     opacity={isDim ? 0.1 : 1}
@@ -547,19 +547,19 @@ export default function DCCDag() {
         </svg>
 
         {/* Legend */}
-        <div style={{ position: "absolute", bottom: 14, right: 60, background: "linear-gradient(170deg, #f5ead0 0%, #ecddb8 100%)", border: "1px solid rgba(139,105,20,0.45)", boxShadow: "2px 2px 10px rgba(0,0,0,0.18), inset 0 0 20px rgba(139,105,20,0.06)", borderRadius: 10, padding: "11px 13px", minWidth: 168, maxHeight: "calc(100vh - 80px)", overflowY: "auto" }}>
-          <div style={{ fontSize: 9, color: "#6b4c1a", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 7, fontFamily: "Cinzel, Georgia, serif" }}>Groups</div>
+        <div style={{ position: "absolute", bottom: 14, right: 60, background: "linear-gradient(170deg, #f5ead0 0%, #ecddb8 100%)", border: "1px solid rgba(139,105,20,0.45)", boxShadow: "2px 2px 10px rgba(0,0,0,0.18), inset 0 0 20px rgba(139,105,20,0.06)", borderRadius: 10, padding: "11px 13px", minWidth: 190, maxHeight: "calc(100vh - 80px)", overflowY: "auto" }}>
+          <div style={{ fontSize: 12, color: "#6b4c1a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, fontFamily: "Cinzel, Georgia, serif" }}>Groups</div>
           {Object.entries(FACTION_STYLE).map(([k, v]) => (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", background: v.color }} />
-              <span style={{ fontSize: 10, color: "#2a1500", fontFamily: "'IM Fell English', Georgia, serif" }}>{v.label}</span>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: v.color }} />
+              <span style={{ fontSize: 13, color: "#2a1500", fontFamily: "'IM Fell English', Georgia, serif" }}>{v.label}</span>
             </div>
           ))}
-          {visibleIds.size > 0 && <div style={{ marginTop: 8, borderTop: "1px solid rgba(139,105,20,0.25)", paddingTop: 6, fontSize: 9, color: "#6b4c1a", fontFamily: "monospace" }}>{visibleIds.size} nodes · {visibleEdges.length} edges</div>}
+          {visibleIds.size > 0 && <div style={{ marginTop: 8, borderTop: "1px solid rgba(139,105,20,0.25)", paddingTop: 6, fontSize: 12, color: "#6b4c1a", fontFamily: "monospace" }}>{visibleIds.size} nodes · {visibleEdges.length} edges</div>}
         </div>
 
         {/* Zoom */}
-        <div style={{ position: "absolute", bottom: 14, right: 14, background: "rgba(245,230,200,0.92)", borderRadius: 3, padding: "3px 9px", fontSize: 10, color: "#6b4c1a", border: "1px solid rgba(139,105,20,0.3)", fontFamily: "monospace" }}>{Math.round(zoom * 100)}%</div>
+        <div style={{ position: "absolute", bottom: 14, right: 14, background: "rgba(245,230,200,0.92)", borderRadius: 3, padding: "3px 9px", fontSize: 12, color: "#6b4c1a", border: "1px solid rgba(139,105,20,0.3)", fontFamily: "monospace" }}>{Math.round(zoom * 100)}%</div>
 
         {/* Hover tooltip — edge or node */}
         {hoveredEdge !== null && (() => {
