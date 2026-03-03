@@ -154,14 +154,19 @@ export default function DCCDag() {
   const isPanning = useRef(false);
   const addCountRef = useRef(0);
 
+  // Visible = added nodes + their DIRECT (1-hop) connections only
   const visibleIds = useMemo(() => {
     const vis = new Set(addedIds);
-    EDGES.forEach(e => {
-      if (addedIds.has(e.from) || addedIds.has(e.to)) { vis.add(e.from); vis.add(e.to); }
+    addedIds.forEach(aid => {
+      EDGES.forEach(e => {
+        if (e.from === aid) vis.add(e.to);
+        if (e.to === aid) vis.add(e.from);
+      });
     });
     return vis;
   }, [addedIds]);
 
+  // Only show edges where BOTH endpoints are visible
   const visibleEdges = useMemo(() => EDGES.filter(e => visibleIds.has(e.from) && visibleIds.has(e.to)), [visibleIds]);
 
   const centerView = useCallback((posOverride) => {
@@ -187,8 +192,14 @@ export default function DCCDag() {
       if (prev.has(id)) return prev;
       const next = new Set(prev);
       next.add(id);
+      // Compute visible: each added node + its direct neighbors
       const newVis = new Set(next);
-      EDGES.forEach(e => { if (next.has(e.from) || next.has(e.to)) { newVis.add(e.from); newVis.add(e.to); } });
+      next.forEach(aid => {
+        EDGES.forEach(e => {
+          if (e.from === aid) newVis.add(e.to);
+          if (e.to === aid) newVis.add(e.from);
+        });
+      });
       const relEdges = EDGES.filter(e => newVis.has(e.from) && newVis.has(e.to));
       const el = svgRef.current;
       let cx = 600, cy = 400;
@@ -210,7 +221,12 @@ export default function DCCDag() {
       next.delete(id);
       if (next.size === 0) { setPositions({}); setSelectedIds(new Set()); addCountRef.current = 0; return next; }
       const newVis = new Set(next);
-      EDGES.forEach(e => { if (next.has(e.from) || next.has(e.to)) { newVis.add(e.from); newVis.add(e.to); } });
+      next.forEach(aid => {
+        EDGES.forEach(e => {
+          if (e.from === aid) newVis.add(e.to);
+          if (e.to === aid) newVis.add(e.from);
+        });
+      });
       const relEdges = EDGES.filter(e => newVis.has(e.from) && newVis.has(e.to));
       const el = svgRef.current;
       let cx = 600, cy = 400;
@@ -400,7 +416,7 @@ export default function DCCDag() {
           {visibleIds.size === 0 && (
             <g>
               <text x="50%" y="42%" textAnchor="middle" fontSize="22" fill="#8b6914" opacity="0.5" style={{ fontFamily: "'Cinzel', Georgia, serif", letterSpacing: "0.08em" }}>⚔ Select Characters to Build the Graph</text>
-              <text x="50%" y="49%" textAnchor="middle" fontSize="13" fill="#8b6914" opacity="0.35" style={{ fontFamily: "'IM Fell English', Georgia, serif" }}>Click characters in the left panel — their connections appear automatically</text>
+              <text x="50%" y="49%" textAnchor="middle" fontSize="13" fill="#8b6914" opacity="0.35" style={{ fontFamily: "'IM Fell English', Georgia, serif" }}>Click a character to see their direct connections, then click outward to explore</text>
               <text x="50%" y="55%" textAnchor="middle" fontSize="11" fill="#8b6914" opacity="0.25" style={{ fontFamily: "monospace" }}>Try starting with Carl or Princess Donut</text>
             </g>
           )}
