@@ -65,29 +65,50 @@ function getNodeById(id) { return NODES.find(n => n.id === id); }
 function runForceLayout(nodeIds, edges, existingPositions, centerX, centerY, iters = 180) {
   const nodes = nodeIds.map(id => getNodeById(id)).filter(Boolean);
   if (nodes.length === 0) return {};
-  const W = 2400, H = 1600;
-  const K = Math.sqrt((W * H) / Math.max(nodes.length, 1)) * 0.85;
-  const REPULSION = K * K * 2.4;
-  const SPRING = 0.010;
-  const DAMPING = 0.78;
+
+  const N = Math.max(nodes.length, 1);
+  const K = 90 + 300 / Math.sqrt(N); // adaptive ideal distance
+  const REPULSION_BASE = K * K;
+  const SPRING = 0.03;
+  const DAMPING = 0.75;
   const pos = {}, vel = {};
   const pinned = new Set();
+  const nodeMap = {};
+  nodes.forEach(n => { nodeMap[n.id] = n; });
 
+  // Group new nodes by faction, assign each faction a cluster angle
+  const factions = {};
+  nodes.forEach(n => { if (!factions[n.faction]) factions[n.faction] = []; factions[n.faction].push(n); });
+  const factionKeys = Object.keys(factions);
+  const factionAngle = {};
+  factionKeys.forEach((fk, i) => { factionAngle[fk] = (i / factionKeys.length) * Math.PI * 2; });
+
+  // Seed positions: existing stay, new go near faction cluster
   nodes.forEach(n => {
     if (existingPositions[n.id]) {
       pos[n.id] = { ...existingPositions[n.id] };
       pinned.add(n.id);
     } else {
-      const ce = edges.find(e =>
-        (e.from === n.id && existingPositions[e.to]) ||
-        (e.to === n.id && existingPositions[e.from])
+      // Find a same-faction neighbor that already has a position
+      const factionMate = nodes.find(m => m.id !== n.id && m.faction === n.faction && (existingPositions[m.id] || pos[m.id]));
+      const connectedExisting = edges.find(e =>
+        (e.from === n.id && existingPositions[e.to]) || (e.to === n.id && existingPositions[e.from])
       );
-      if (ce) {
-        const nid = ce.from === n.id ? ce.to : ce.from;
+      if (factionMate && (existingPositions[factionMate.id] || pos[factionMate.id])) {
+        const mp = existingPositions[factionMate.id] || pos[factionMate.id];
+        pos[n.id] = { x: mp.x + (Math.random() - 0.5) * 60, y: mp.y + (Math.random() - 0.5) * 60 };
+      } else if (connectedExisting) {
+        const nid = connectedExisting.from === n.id ? connectedExisting.to : connectedExisting.from;
         const np = existingPositions[nid];
-        pos[n.id] = { x: np.x + (Math.random() - 0.5) * 160, y: np.y + (Math.random() - 0.5) * 160 };
+        // Place along the faction's angular direction from the connected node
+        const a = factionAngle[n.faction] || 0;
+        const r = 80 + Math.random() * 80;
+        pos[n.id] = { x: np.x + Math.cos(a) * r + (Math.random() - 0.5) * 40, y: np.y + Math.sin(a) * r + (Math.random() - 0.5) * 40 };
       } else {
-        pos[n.id] = { x: centerX + (Math.random() - 0.5) * 300, y: centerY + (Math.random() - 0.5) * 300 };
+        // Fresh graph — place factions in distinct regions
+        const a = factionAngle[n.faction] || 0;
+        const r = 120 + Math.random() * 100;
+        pos[n.id] = { x: centerX + Math.cos(a) * r + (Math.random() - 0.5) * 50, y: centerY + Math.sin(a) * r + (Math.random() - 0.5) * 50 };
       }
     }
     vel[n.id] = { x: 0, y: 0 };
@@ -96,39 +117,81 @@ function runForceLayout(nodeIds, edges, existingPositions, centerX, centerY, ite
   const ids = nodes.map(n => n.id);
   const relEdges = edges.filter(e => pos[e.from] && pos[e.to]);
 
+  // Build adjacency for multi-hop awareness
+  const neighbors = {};
+  ids.forEach(id => { neighbors[id] = new Set(); });
+  relEdges.forEach(e => { if (neighbors[e.from]) neighbors[e.from].add(e.to); if (neighbors[e.to]) neighbors[e.to].add(e.from); });
+
   for (let iter = 0; iter < iters; iter++) {
-    const cooling = 1 - (iter / iters) * 0.92;
+    const t = iter / iters;
+    const cooling = 1 - t * 0.9;
     const force = {};
     ids.forEach(id => { force[id] = { x: 0, y: 0 }; });
+
+    // Repulsion: much weaker for same-faction, stronger for cross-faction
     for (let a = 0; a < ids.length; a++) {
       for (let b = a + 1; b < ids.length; b++) {
         const ia = ids[a], ib = ids[b];
+        const na = nodeMap[ia], nb = nodeMap[ib];
+        const sameFaction = na && nb && na.faction === nb.faction;
+        const connected = neighbors[ia] && neighbors[ia].has(ib);
+        // Same-faction nodes barely repel; connected nodes repel even less
+        let repMult = 1.0;
+        if (connected && sameFaction) repMult = 0.1;
+        else if (connected) repMult = 0.2;
+        else if (sameFaction) repMult = 0.15;
+        const rep = REPULSION_BASE * repMult;
         const dx = pos[ia].x - pos[ib].x, dy = pos[ia].y - pos[ib].y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-        const mag = REPULSION / (dist * dist);
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.1;
+        // Cap repulsion at short distances to prevent explosion
+        const effectiveDist = Math.max(dist, 30);
+        const mag = rep / (effectiveDist * effectiveDist);
         const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
         force[ia].x += nx; force[ia].y += ny;
         force[ib].x -= nx; force[ib].y -= ny;
       }
     }
+
+    // Edge springs: pull connected nodes together with short rest length
     relEdges.forEach(e => {
       const dx = pos[e.to].x - pos[e.from].x, dy = pos[e.to].y - pos[e.from].y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const mag = (dist - K * 0.6) * SPRING;
+      const restLen = K * 0.35;
+      const mag = (dist - restLen) * SPRING;
       const nx = (dx / dist) * mag, ny = (dy / dist) * mag;
       force[e.from].x += nx; force[e.from].y += ny;
       force[e.to].x -= nx; force[e.to].y -= ny;
     });
-    ids.forEach(id => {
-      force[id].x += (centerX - pos[id].x) * 0.0008;
-      force[id].y += (centerY - pos[id].y) * 0.0008;
+
+    // Faction clustering: pull toward faction centroid
+    const centroids = {};
+    factionKeys.forEach(fk => {
+      let sx = 0, sy = 0, cnt = 0;
+      factions[fk].forEach(n => { if (pos[n.id]) { sx += pos[n.id].x; sy += pos[n.id].y; cnt++; } });
+      if (cnt > 0) centroids[fk] = { x: sx / cnt, y: sy / cnt };
     });
+    const CLUSTER_PULL = 0.02;
     ids.forEach(id => {
-      const df = pinned.has(id) ? 0.15 : 1.0;
+      const n = nodeMap[id];
+      if (!n || !centroids[n.faction]) return;
+      const c = centroids[n.faction];
+      force[id].x += (c.x - pos[id].x) * CLUSTER_PULL * cooling;
+      force[id].y += (c.y - pos[id].y) * CLUSTER_PULL * cooling;
+    });
+
+    // Very gentle gravity
+    ids.forEach(id => {
+      force[id].x += (centerX - pos[id].x) * 0.0004;
+      force[id].y += (centerY - pos[id].y) * 0.0004;
+    });
+
+    // Integrate
+    ids.forEach(id => {
+      const df = pinned.has(id) ? 0.08 : 1.0;
       vel[id].x = (vel[id].x + force[id].x * df) * DAMPING;
       vel[id].y = (vel[id].y + force[id].y * df) * DAMPING;
       const speed = Math.sqrt(vel[id].x ** 2 + vel[id].y ** 2);
-      const maxSpeed = K * cooling * 0.45;
+      const maxSpeed = K * cooling * 0.5;
       if (speed > maxSpeed) { vel[id].x *= maxSpeed / speed; vel[id].y *= maxSpeed / speed; }
       pos[id].x += vel[id].x;
       pos[id].y += vel[id].y;
