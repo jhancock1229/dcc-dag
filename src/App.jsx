@@ -362,10 +362,10 @@ export default function DCCDag() {
     const dx = tp.x - fp.x, dy = tp.y - fp.y;
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
     const ux = dx / len, uy = dy / len;
-    const R = 22;
+    const R = 32;
     return {
       x1: fp.x + ux * R, y1: fp.y + uy * R,
-      x2: tp.x - ux * (R + 8), y2: tp.y - uy * (R + 8),
+      x2: tp.x - ux * (R + 10), y2: tp.y - uy * (R + 10),
       mx: (fp.x + tp.x) / 2 - uy * 20, my: (fp.y + tp.y) / 2 + ux * 20,
     };
   }, []);
@@ -379,6 +379,26 @@ export default function DCCDag() {
   }, [selectedIds, hovered, visibleEdges]);
 
   const visibleNodesList = useMemo(() => [...visibleIds].map(id => getNodeById(id)).filter(Boolean), [visibleIds]);
+
+  // Compute faction cluster regions for background blobs
+  const factionRegions = useMemo(() => {
+    const regions = {};
+    visibleNodesList.forEach(node => {
+      const p = positions[node.id];
+      if (!p) return;
+      if (!regions[node.faction]) regions[node.faction] = [];
+      regions[node.faction].push(p);
+    });
+    const result = {};
+    Object.entries(regions).forEach(([fk, pts]) => {
+      if (pts.length < 2) return;
+      const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+      const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+      const maxDist = Math.max(60, ...pts.map(p => Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2)));
+      result[fk] = { cx, cy, r: maxDist + 55 };
+    });
+    return result;
+  }, [visibleNodesList, positions]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
@@ -485,6 +505,20 @@ export default function DCCDag() {
           )}
 
           <g transform={"translate(" + pan.x + "," + pan.y + ") scale(" + zoom + ")"}>
+            {/* Faction background regions */}
+            {Object.entries(factionRegions).map(([fk, reg]) => {
+              const fs = FACTION_STYLE[fk];
+              if (!fs) return null;
+              return (
+                <g key={"region-" + fk}>
+                  <circle cx={reg.cx} cy={reg.cy} r={reg.r} fill={fs.color} opacity={0.06} />
+                  <circle cx={reg.cx} cy={reg.cy} r={reg.r} fill="none" stroke={fs.color} strokeWidth={1} opacity={0.12} strokeDasharray="8,6" />
+                  <text x={reg.cx} y={reg.cy - reg.r + 16} textAnchor="middle" fontSize="11" fill={fs.color} opacity={0.35}
+                    style={{ fontFamily: "Cinzel, Georgia, serif", letterSpacing: "0.1em", textTransform: "uppercase", pointerEvents: "none" }}>{fs.label}</text>
+                </g>
+              );
+            })}
+
             {/* Edges */}
             {visibleEdges.map((e, i) => {
               const fn = positions[e.from], tn = positions[e.to];
@@ -519,8 +553,12 @@ export default function DCCDag() {
               const isSel = selectedIds.has(node.id);
               const isHov = hovered === node.id;
               const isDim = connectedToSelected && !connectedToSelected.has(node.id);
-              const baseR = Math.round(12 + getProminence(node.id) * 1.5);
+              const baseR = Math.round(28 + getProminence(node.id) * 2.5);
               const R = isSel ? baseR + 4 : isHov ? baseR + 3 : baseR;
+              const nameParts = node.label.split(" ");
+              const line1 = nameParts.length <= 2 ? node.label : nameParts.slice(0, Math.ceil(nameParts.length / 2)).join(" ");
+              const line2 = nameParts.length <= 2 ? null : nameParts.slice(Math.ceil(nameParts.length / 2)).join(" ");
+              const textSize = R > 40 ? 12 : R > 34 ? 11 : 10;
               return (
                 <g key={node.id} transform={"translate(" + pos.x + "," + pos.y + ")"}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
@@ -528,18 +566,21 @@ export default function DCCDag() {
                   onMouseEnter={() => { setHovered(node.id); setHoveredEdge(null); }} onMouseLeave={() => setHovered(null)} style={{ cursor: "pointer" }}>
                   {(isSel || isHov) && <circle r={R + 6} fill="none" stroke={fs.color} strokeWidth={isSel ? 2.5 : 1.5} opacity={isSel ? 0.5 : 0.25} />}
                   <circle r={R}
-                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : isAdded ? fs.dim : "#f8efd4"}
+                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : isAdded ? fs.dim : "#f5ead0"}
                     stroke={fs.color}
-                    strokeWidth={isSel ? 3 : isHov ? 2.5 : isAdded ? 2 : 1.5}
-                    opacity={isDim ? 0.18 : 1}
-                    style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 8px " + fs.color + "55)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.15))" }} />
-                  <text y={1} textAnchor="middle" fontSize="12" opacity={isDim ? 0.12 : 0.75} style={{ pointerEvents: "none" }}>{ROLE_EMOJI[node.role] || "●"}</text>
-                  <text y={R + 16} textAnchor="middle"
-                    fontSize={isSel ? 16 : isHov ? 15 : 14}
+                    strokeWidth={isSel ? 3 : isHov ? 2.5 : isAdded ? 2.5 : 1.8}
+                    opacity={isDim ? 0.15 : 1}
+                    style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 8px " + fs.color + "55)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.12))" }} />
+                  <text y={line2 ? -4 : 1} textAnchor="middle" fontSize={textSize}
                     fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
-                    fill={isSel || isHov || isAdded ? fs.color : "#3d2000"}
-                    opacity={isDim ? 0.1 : 1}
-                    style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{node.label}</text>
+                    fill={isDim ? "#999" : isSel || isHov || isAdded ? fs.color : "#2a1500"}
+                    opacity={isDim ? 0.2 : 1}
+                    style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{line1}</text>
+                  {line2 && <text y={textSize + 1} textAnchor="middle" fontSize={textSize}
+                    fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
+                    fill={isDim ? "#999" : isSel || isHov || isAdded ? fs.color : "#2a1500"}
+                    opacity={isDim ? 0.2 : 1}
+                    style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{line2}</text>}
                 </g>
               );
             })}
