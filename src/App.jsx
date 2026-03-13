@@ -204,113 +204,92 @@ function runForceLayout(nodeIds, edges, existingPositions, centerX, centerY, ite
 export default function DCCDag() {
   const svgRef = useRef(null);
   const [page, setPage] = useState("dag");
-  const [addedIds, setAddedIds] = useState(new Set());
   const [positions, setPositions] = useState({});
-  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [focusedIds, setFocusedIds] = useState(new Set()); // characters user clicked to highlight
   const [rosterSearch, setRosterSearch] = useState("");
   const [hovered, setHovered] = useState(null);
-  const [hoveredEdge, setHoveredEdge] = useState(null); // index into visibleEdges
+  const [hoveredEdge, setHoveredEdge] = useState(null);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1.0);
+  const [layoutReady, setLayoutReady] = useState(false);
   const dragging = useRef(null);
   const panStart = useRef(null);
   const isPanning = useRef(false);
-  const addCountRef = useRef(0);
 
-  // Visible = added nodes + their DIRECT (1-hop) connections only
-  const visibleIds = useMemo(() => {
-    const vis = new Set(addedIds);
-    addedIds.forEach(aid => {
-      EDGES.forEach(e => {
-        if (e.from === aid) vis.add(e.to);
-        if (e.to === aid) vis.add(e.from);
-      });
+  // All nodes and edges are always visible
+  const visibleIds = useMemo(() => new Set(NODES.map(n => n.id)), []);
+  const visibleEdges = useMemo(() => EDGES, []);
+
+  // Nodes/edges connected to focused characters (1-hop)
+  const focusedConnected = useMemo(() => {
+    if (focusedIds.size === 0 && !hovered) return null;
+    const active = new Set([...focusedIds, ...(hovered ? [hovered] : [])]);
+    const conn = new Set(active);
+    EDGES.forEach(e => {
+      if (active.has(e.from) || active.has(e.to)) { conn.add(e.from); conn.add(e.to); }
     });
-    return vis;
-  }, [addedIds]);
+    return conn;
+  }, [focusedIds, hovered]);
 
-  // Only show edges where BOTH endpoints are visible
-  const visibleEdges = useMemo(() => EDGES.filter(e => visibleIds.has(e.from) && visibleIds.has(e.to)), [visibleIds]);
+  // Run layout once on mount
+  useEffect(() => {
+    const el = svgRef.current;
+    let cx = 1200, cy = 800;
+    if (el) { const r = el.getBoundingClientRect(); cx = r.width / 2; cy = r.height / 2; }
+    const allIds = NODES.map(n => n.id);
+    const np = runForceLayout(allIds, EDGES, {}, cx, cy, 300);
+    setPositions(np);
+    setLayoutReady(true);
+  }, []);
 
-  const centerView = useCallback((posOverride) => {
+  // Auto-fit after layout
+  useEffect(() => {
+    if (!layoutReady) return;
     const el = svgRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     if (rect.width === 0) return;
-    const p = posOverride || positions;
-    const arr = Object.values(p);
-    if (arr.length === 0) { setPan({ x: 0, y: 0 }); setZoom(1.0); return; }
-    const minX = Math.min(...arr.map(v => v.x)) - 100;
-    const maxX = Math.max(...arr.map(v => v.x)) + 100;
-    const minY = Math.min(...arr.map(v => v.y)) - 100;
-    const maxY = Math.max(...arr.map(v => v.y)) + 100;
-    const z = Math.min(1.0, Math.max(0.15, Math.min(rect.width / (maxX - minX || 1), rect.height / (maxY - minY || 1)) * 0.85));
+    const arr = Object.values(positions);
+    if (arr.length === 0) return;
+    const pad = 80;
+    const minX = Math.min(...arr.map(v => v.x)) - pad;
+    const maxX = Math.max(...arr.map(v => v.x)) + pad;
+    const minY = Math.min(...arr.map(v => v.y)) - pad;
+    const maxY = Math.max(...arr.map(v => v.y)) + pad;
+    const z = Math.min(1.0, Math.max(0.1, Math.min(rect.width / (maxX - minX || 1), rect.height / (maxY - minY || 1)) * 0.9));
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    setPan({ x: rect.width / 2 - cx * z, y: rect.height / 2 - cy * z });
+    setZoom(z);
+  }, [layoutReady, positions]);
+
+  const centerView = useCallback(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const arr = Object.values(positions);
+    if (arr.length === 0) return;
+    const pad = 80;
+    const minX = Math.min(...arr.map(v => v.x)) - pad;
+    const maxX = Math.max(...arr.map(v => v.x)) + pad;
+    const minY = Math.min(...arr.map(v => v.y)) - pad;
+    const maxY = Math.max(...arr.map(v => v.y)) + pad;
+    const z = Math.min(1.0, Math.max(0.1, Math.min(rect.width / (maxX - minX || 1), rect.height / (maxY - minY || 1)) * 0.9));
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
     setPan({ x: rect.width / 2 - cx * z, y: rect.height / 2 - cy * z });
     setZoom(z);
   }, [positions]);
 
-  const addCharacter = useCallback((id) => {
-    setAddedIds(prev => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      // Compute visible: each added node + its direct neighbors
-      const newVis = new Set(next);
-      next.forEach(aid => {
-        EDGES.forEach(e => {
-          if (e.from === aid) newVis.add(e.to);
-          if (e.to === aid) newVis.add(e.from);
-        });
-      });
-      const relEdges = EDGES.filter(e => newVis.has(e.from) && newVis.has(e.to));
-      const el = svgRef.current;
-      let cx = 600, cy = 400;
-      if (el) { const r = el.getBoundingClientRect(); cx = (r.width / 2 - pan.x) / zoom; cy = (r.height / 2 - pan.y) / zoom; }
-      setPositions(prevPos => {
-        const np = runForceLayout([...newVis], relEdges, prevPos, cx, cy, Object.keys(prevPos).length > 0 ? 120 : 200);
-        addCountRef.current++;
-        if (addCountRef.current <= 3) setTimeout(() => centerView(np), 30);
-        return np;
-      });
-      return next;
+  const toggleFocus = useCallback((id) => {
+    setFocusedIds(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
     });
-    setSelectedIds(prev => { const s = new Set(prev); s.add(id); return s; });
-  }, [pan, zoom, centerView]);
+  }, []);
 
-  const removeCharacter = useCallback((id) => {
-    setAddedIds(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      if (next.size === 0) { setPositions({}); setSelectedIds(new Set()); addCountRef.current = 0; return next; }
-      const newVis = new Set(next);
-      next.forEach(aid => {
-        EDGES.forEach(e => {
-          if (e.from === aid) newVis.add(e.to);
-          if (e.to === aid) newVis.add(e.from);
-        });
-      });
-      const relEdges = EDGES.filter(e => newVis.has(e.from) && newVis.has(e.to));
-      const el = svgRef.current;
-      let cx = 600, cy = 400;
-      if (el) { const r = el.getBoundingClientRect(); cx = (r.width / 2 - pan.x) / zoom; cy = (r.height / 2 - pan.y) / zoom; }
-      setPositions(prevPos => {
-        const kept = {};
-        newVis.forEach(nid => { if (prevPos[nid]) kept[nid] = prevPos[nid]; });
-        return runForceLayout([...newVis], relEdges, kept, cx, cy, 80);
-      });
-      return next;
-    });
-    setSelectedIds(prev => { const s = new Set(prev); s.delete(id); return s; });
-  }, [pan, zoom]);
-
-  const toggleRoster = useCallback((id) => {
-    if (!addedIds.has(id)) addCharacter(id);
-    else setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
-  }, [addedIds, addCharacter]);
-
-  const clearAll = useCallback(() => {
-    setAddedIds(new Set()); setSelectedIds(new Set()); setPositions({}); addCountRef.current = 0;
+  const clearFocus = useCallback(() => {
+    setFocusedIds(new Set());
   }, []);
 
   // ─── Pan & Zoom ──────────────────────────────────────────────────────────
@@ -370,15 +349,9 @@ export default function DCCDag() {
     };
   }, []);
 
-  const connectedToSelected = useMemo(() => {
-    if (selectedIds.size === 0 && !hovered) return null;
-    const active = new Set([...selectedIds, ...(hovered ? [hovered] : [])]);
-    const conn = new Set(active);
-    visibleEdges.forEach(e => { if (active.has(e.from) || active.has(e.to)) { conn.add(e.from); conn.add(e.to); } });
-    return conn;
-  }, [selectedIds, hovered, visibleEdges]);
+  const connectedToSelected = focusedConnected;
 
-  const visibleNodesList = useMemo(() => [...visibleIds].map(id => getNodeById(id)).filter(Boolean), [visibleIds]);
+  const visibleNodesList = useMemo(() => NODES, []);
 
   // Compute faction cluster regions for background blobs
   const factionRegions = useMemo(() => {
@@ -424,9 +397,9 @@ export default function DCCDag() {
           </span>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
-          {page === "dag" && addedIds.size > 0 && <>
+          {page === "dag" && <>
             <button onClick={() => centerView()} style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.4)", borderRadius: 3, color: "#c9a84c", padding: "5px 13px", fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>⊞ Fit View</button>
-            <button onClick={clearAll} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: "rgba(201,168,76,0.5)", padding: "5px 13px", fontSize: 13, cursor: "pointer" }}>✕ Clear All</button>
+            {focusedIds.size > 0 && <button onClick={clearFocus} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: "rgba(201,168,76,0.5)", padding: "5px 13px", fontSize: 13, cursor: "pointer" }}>✕ Clear Focus</button>}
           </>}
           <button onClick={() => setPage(p => p === "cookbook" ? "dag" : "cookbook")}
             style={{ background: page === "cookbook" ? "rgba(201,168,76,0.2)" : "rgba(255,255,255,0.05)", border: page === "cookbook" ? "1px solid rgba(201,168,76,0.6)" : "1px solid rgba(201,168,76,0.2)", borderRadius: 3, color: page === "cookbook" ? "#c9a84c" : "rgba(201,168,76,0.5)", padding: "5px 14px", fontSize: 13, cursor: "pointer", fontFamily: "Georgia, serif" }}>
@@ -441,13 +414,13 @@ export default function DCCDag() {
         {/* ── Left Roster ── */}
         <div style={{ width: 280, flexShrink: 0, display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #1e0e00 0%, #160900 100%)", borderRight: "2px solid #8b6914", boxShadow: "3px 0 16px rgba(0,0,0,0.35)", zIndex: 10 }}>
           <div style={{ padding: "12px 12px 8px", borderBottom: "1px solid rgba(201,168,76,0.15)" }}>
-            <div style={{ fontSize: 11, color: "rgba(201,168,76,0.65)", letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: "Cinzel, Georgia, serif", marginBottom: 6 }}>Click characters to build graph</div>
+            <div style={{ fontSize: 11, color: "rgba(201,168,76,0.65)", letterSpacing: "0.14em", textTransform: "uppercase", fontFamily: "Cinzel, Georgia, serif", marginBottom: 6 }}>Click to focus characters</div>
             <input value={rosterSearch} onChange={e => setRosterSearch(e.target.value)} placeholder="Search…"
               style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: 3, color: "#e8d5a3", padding: "7px 10px", fontSize: 14, outline: "none", fontFamily: "'IM Fell English', Georgia, serif", boxSizing: "border-box" }} />
-            {addedIds.size > 0 && (
+            {focusedIds.size > 0 && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 7 }}>
-                <span style={{ fontSize: 12, color: "rgba(201,168,76,0.7)", fontFamily: "monospace" }}>{visibleIds.size} on graph · {addedIds.size} pinned</span>
-                <button onClick={clearAll} style={{ fontSize: 12, color: "rgba(201,168,76,0.55)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px" }}>clear</button>
+                <span style={{ fontSize: 12, color: "rgba(201,168,76,0.7)", fontFamily: "monospace" }}>{focusedIds.size} focused</span>
+                <button onClick={clearFocus} style={{ fontSize: 12, color: "rgba(201,168,76,0.55)", background: "none", border: "none", cursor: "pointer", padding: "1px 4px" }}>clear</button>
               </div>
             )}
           </div>
@@ -459,22 +432,21 @@ export default function DCCDag() {
                 <div key={fk}>
                   <div style={{ padding: "5px 12px 3px", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: fStyle.color, fontFamily: "Cinzel, Georgia, serif", opacity: 0.8 }}>{fStyle.label}</div>
                   {fn.sort((a, b) => a.book - b.book || a.label.localeCompare(b.label)).map(node => {
-                    const isAdded = addedIds.has(node.id);
-                    const isOnCanvas = visibleIds.has(node.id);
+                    const isFocused = focusedIds.has(node.id);
+                    const isConn = focusedConnected && focusedConnected.has(node.id);
                     const isHov = hovered === node.id;
                     return (
-                      <div key={node.id} onClick={() => toggleRoster(node.id)} onMouseEnter={() => setHovered(node.id)} onMouseLeave={() => setHovered(null)}
+                      <div key={node.id} onClick={() => toggleFocus(node.id)} onMouseEnter={() => setHovered(node.id)} onMouseLeave={() => setHovered(null)}
                         style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px",
-                          background: isAdded ? fStyle.color + "22" : isOnCanvas ? fStyle.color + "0d" : isHov ? "rgba(255,255,255,0.05)" : "transparent",
-                          borderLeft: isAdded ? "3px solid " + fStyle.color : isOnCanvas ? "3px solid " + fStyle.color + "55" : "3px solid transparent",
+                          background: isFocused ? fStyle.color + "33" : isConn ? fStyle.color + "15" : isHov ? "rgba(255,255,255,0.05)" : "transparent",
+                          borderLeft: isFocused ? "3px solid " + fStyle.color : "3px solid transparent",
                           cursor: "pointer", transition: "background 0.1s" }}>
                         <span style={{ fontSize: 16 }}>{ROLE_EMOJI[node.role] || "●"}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 15, color: isAdded ? fStyle.color : isOnCanvas ? fStyle.color + "cc" : "#c9a87a", fontWeight: isAdded ? 700 : isOnCanvas ? 500 : 400, fontFamily: "'IM Fell English', Georgia, serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{node.label}</div>
+                          <div style={{ fontSize: 15, color: isFocused ? fStyle.color : isConn ? fStyle.color + "cc" : "#c9a87a", fontWeight: isFocused ? 700 : 400, fontFamily: "'IM Fell English', Georgia, serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{node.label}</div>
                           <div style={{ fontSize: 12, color: "rgba(201,168,76,0.45)", fontFamily: "monospace" }}>Bk {node.book}</div>
                         </div>
-                        {isAdded && <span onClick={(e) => { e.stopPropagation(); removeCharacter(node.id); }} style={{ fontSize: 12, color: "rgba(201,168,76,0.5)", padding: "2px 6px", cursor: "pointer" }} title="Remove from graph">✕</span>}
-                        {!isAdded && isOnCanvas && <span style={{ fontSize: 11, color: "rgba(201,168,76,0.4)", fontFamily: "monospace" }}>linked</span>}
+                        {isFocused && <span onClick={(e) => { e.stopPropagation(); toggleFocus(node.id); }} style={{ fontSize: 12, color: "rgba(201,168,76,0.5)", padding: "2px 6px", cursor: "pointer" }}>✕</span>}
                       </div>
                     );
                   })}
@@ -485,8 +457,8 @@ export default function DCCDag() {
         </div>
 
         {/* ── SVG Canvas ── */}
-        <svg ref={svgRef} style={{ flex: 1, display: "block", cursor: visibleIds.size > 0 ? "grab" : "default" }}
-          onMouseDown={onSvgMouseDown} onClick={() => { if (selectedIds.size > 0) setSelectedIds(new Set()); }}>
+        <svg ref={svgRef} style={{ flex: 1, display: "block", cursor: "grab" }}
+          onMouseDown={onSvgMouseDown} onClick={() => { if (focusedIds.size > 0) setFocusedIds(new Set()); }}>
           <defs>
             {Object.entries(EDGE_STYLE).map(([type, s]) => (
               <marker key={type} id={"arr-" + type} markerWidth="10" markerHeight="10" refX="7" refY="4" orient="auto">
@@ -495,14 +467,6 @@ export default function DCCDag() {
             ))}
             <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           </defs>
-
-          {visibleIds.size === 0 && (
-            <g>
-              <text x="50%" y="42%" textAnchor="middle" fontSize="22" fill="#8b6914" opacity="0.5" style={{ fontFamily: "'Cinzel', Georgia, serif", letterSpacing: "0.08em" }}>⚔ Select Characters to Build the Graph</text>
-              <text x="50%" y="49%" textAnchor="middle" fontSize="13" fill="#8b6914" opacity="0.35" style={{ fontFamily: "'IM Fell English', Georgia, serif" }}>Click a character to see their direct connections, then click outward to explore</text>
-              <text x="50%" y="55%" textAnchor="middle" fontSize="11" fill="#8b6914" opacity="0.25" style={{ fontFamily: "monospace" }}>Try starting with Carl or Princess Donut</text>
-            </g>
-          )}
 
           <g transform={"translate(" + pan.x + "," + pan.y + ") scale(" + zoom + ")"}>
             {/* Faction background regions */}
@@ -525,7 +489,7 @@ export default function DCCDag() {
               if (!fn || !tn) return null;
               const { x1, y1, x2, y2, mx, my } = computeEdgePath(fn, tn);
               const es = EDGE_STYLE[e.type] || EDGE_STYLE.connected;
-              const isActive = connectedToSelected && (selectedIds.has(e.from) || selectedIds.has(e.to) || hovered === e.from || hovered === e.to);
+              const isActive = connectedToSelected && (focusedIds.has(e.from) || focusedIds.has(e.to) || hovered === e.from || hovered === e.to);
               const isEdgeHov = hoveredEdge === i;
               const isDim = connectedToSelected && !isActive && !isEdgeHov;
               const pathD = "M" + x1 + "," + y1 + " Q" + mx + "," + my + " " + x2 + "," + y2;
@@ -549,12 +513,12 @@ export default function DCCDag() {
               const pos = positions[node.id];
               if (!pos) return null;
               const fs = FACTION_STYLE[node.faction];
-              const isAdded = addedIds.has(node.id);
-              const isSel = selectedIds.has(node.id);
+              const isFocused = focusedIds.has(node.id);
+              const isConn = focusedConnected && focusedConnected.has(node.id);
               const isHov = hovered === node.id;
               const isDim = connectedToSelected && !connectedToSelected.has(node.id);
               const baseR = Math.round(28 + getProminence(node.id) * 2.5);
-              const R = isSel ? baseR + 4 : isHov ? baseR + 3 : baseR;
+              const R = isFocused ? baseR + 5 : isHov ? baseR + 3 : baseR;
               const nameParts = node.label.split(" ");
               const line1 = nameParts.length <= 2 ? node.label : nameParts.slice(0, Math.ceil(nameParts.length / 2)).join(" ");
               const line2 = nameParts.length <= 2 ? null : nameParts.slice(Math.ceil(nameParts.length / 2)).join(" ");
@@ -562,24 +526,24 @@ export default function DCCDag() {
               return (
                 <g key={node.id} transform={"translate(" + pos.x + "," + pos.y + ")"}
                   onMouseDown={e => onNodeMouseDown(e, node.id)}
-                  onClick={e => { e.stopPropagation(); if (dragging.current && dragging.current.moved) return; if (!isAdded) addCharacter(node.id); else setSelectedIds(prev => { const s = new Set(prev); s.has(node.id) ? s.delete(node.id) : s.add(node.id); return s; }); }}
+                  onClick={e => { e.stopPropagation(); if (dragging.current && dragging.current.moved) return; toggleFocus(node.id); }}
                   onMouseEnter={() => { setHovered(node.id); setHoveredEdge(null); }} onMouseLeave={() => setHovered(null)} style={{ cursor: "pointer" }}>
-                  {(isSel || isHov) && <circle r={R + 6} fill="none" stroke={fs.color} strokeWidth={isSel ? 2.5 : 1.5} opacity={isSel ? 0.5 : 0.25} />}
+                  {(isFocused || isHov) && <circle r={R + 8} fill="none" stroke={fs.color} strokeWidth={isFocused ? 3 : 1.5} opacity={isFocused ? 0.6 : 0.25} />}
                   <circle r={R}
-                    fill={isSel ? fs.dim : isHov ? "#fdf5e0" : isAdded ? fs.dim : "#f5ead0"}
+                    fill={isFocused ? fs.dim : isHov ? "#fdf5e0" : isConn ? fs.dim : "#f5ead0"}
                     stroke={fs.color}
-                    strokeWidth={isSel ? 3 : isHov ? 2.5 : isAdded ? 2.5 : 1.8}
+                    strokeWidth={isFocused ? 3.5 : isHov ? 2.5 : isConn ? 2 : 1.5}
+                    opacity={isDim ? 0.12 : 1}
+                    style={{ transition: "all 0.15s ease", filter: isFocused ? "drop-shadow(0 0 12px " + fs.color + "88)" : isHov ? "drop-shadow(0 0 8px " + fs.color + "44)" : "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }} />
+                  <text y={line2 ? -4 : 1} textAnchor="middle" fontSize={isFocused ? textSize + 2 : textSize}
+                    fontWeight={isFocused ? "700" : isHov ? "600" : "500"}
+                    fill={isDim ? "#aaa" : isFocused || isHov ? fs.color : "#2a1500"}
                     opacity={isDim ? 0.15 : 1}
-                    style={{ transition: "all 0.12s ease", filter: isSel || isHov ? "drop-shadow(0 0 8px " + fs.color + "55)" : "drop-shadow(0 1px 3px rgba(0,0,0,0.12))" }} />
-                  <text y={line2 ? -4 : 1} textAnchor="middle" fontSize={textSize}
-                    fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
-                    fill={isDim ? "#999" : isSel || isHov || isAdded ? fs.color : "#2a1500"}
-                    opacity={isDim ? 0.2 : 1}
                     style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{line1}</text>
-                  {line2 && <text y={textSize + 1} textAnchor="middle" fontSize={textSize}
-                    fontWeight={isSel ? "700" : isHov || isAdded ? "600" : "500"}
-                    fill={isDim ? "#999" : isSel || isHov || isAdded ? fs.color : "#2a1500"}
-                    opacity={isDim ? 0.2 : 1}
+                  {line2 && <text y={(isFocused ? textSize + 2 : textSize) + 1} textAnchor="middle" fontSize={isFocused ? textSize + 2 : textSize}
+                    fontWeight={isFocused ? "700" : isHov ? "600" : "500"}
+                    fill={isDim ? "#aaa" : isFocused || isHov ? fs.color : "#2a1500"}
+                    opacity={isDim ? 0.15 : 1}
                     style={{ pointerEvents: "none", fontFamily: "'IM Fell English', Georgia, serif" }}>{line2}</text>}
                 </g>
               );
@@ -661,7 +625,7 @@ export default function DCCDag() {
                 </div>
               )}
               <div style={{ fontSize: 10, color: "rgba(201,168,76,0.35)", fontFamily: "monospace", marginTop: 6 }}>
-                {he.length} total relationship{he.length !== 1 ? "s" : ""} · {!onCanvas ? "click to add" : addedIds.has(hovered) ? "click to select" : "click to expand"}
+                {he.length} total relationship{he.length !== 1 ? "s" : ""} · {focusedIds.has(hovered) ? "click to unfocus" : "click to focus"}
               </div>
             </div>
           );
